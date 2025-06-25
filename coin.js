@@ -155,7 +155,7 @@ function animate() {
     requestAnimationFrame(animate);
     controls.update();
 
-    // If the FBX model is loaded, rotate it along the Y axis at the defined speed
+    // If the FBX model is loaded, rotate it along the Y axis at the defined speed...
     if (fbxModel) {
         fbxModel.rotation.y += autoRotateSpeed;
     }
