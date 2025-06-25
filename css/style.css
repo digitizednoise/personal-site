@@ -200,12 +200,17 @@ br {
 }
 
 .infosection {
-  display: grid;
-  padding-bottom: 1vh;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
-  align-self: stretch;
-  gap: 5vh;
+  opacity: 100%;
+  margin: 0.3rem 0;
+  width: auto;
+  justify-content: center;
+  gap: 3vh;
+  position: relative;
+  z-index: 10;
+  text-align: center;
 }
 
 .footer {
@@ -663,19 +668,6 @@ a:hover #navbar {
 }
 
 /* Container for text and code */
-.codeContainer {
-  display: flex;
-  align-items: stretch; /* Makes child columns match in height */
-  gap: 2rem; /* Space between text and code */
-  width: 100%;
-  max-width: 100%; /* Use 100% of the parent container's width */
-  flex: 1 1 auto;
-  margin: 0.3rem 0;
-  white-space: pre-wrap;
-  line-height: 1;
-  overflow-wrap: break-word;
-}
-
 /* Ensure <pre> blocks inside the container wrap content */
 .codeContainer pre {
   white-space: pre-wrap; /* Allows the text to wrap */
@@ -691,13 +683,13 @@ pre.shiki {
   min-height: 0;
   overflow-x: auto;
   max-width: 100%;
-  padding: 1em;
+  padding: 2em;
   background-color: rgba(255, 255, 255, 0.1);
 }
 
 html body .codeContainer pre.shiki,
 html body .codeContainer pre.shiki * {
-  font-size: 0.25rem !important;
+  font-size: 0.26rem !important;
   font-family: JetBrains Mono !important;
 }
 
@@ -709,7 +701,7 @@ html body .codeContainer pre.shiki * {
 
 .lastUpdated {
   font-family: "JetBrains Mono", monospace;
-  font-size: 1.8vh;
+  font-size: clamp(0.4vh, 0.4vh + 0.2rem, 1rem);
   margin: auto;
 }
 
