@@ -1,2 +1,0 @@
-plainText = input("Please enter the coded text: ")
-distance = int(input("Please enter the value of distance: "))

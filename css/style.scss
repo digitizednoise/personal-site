@@ -1,35 +1,15 @@
-// SCSS_INIT
+//SCSS
+//SERGIO_C
+//DIGITIZEDNOISE.COM
 
-//*****COLORS*****//
+/* ********** INIT ********** */
+
+// COLORS
 $gray: #a5a5a5;
 $lightDark: light-dark(white,black);
 $darkLight: light-dark(black,white);
 
-//*****FONTS*****//
-$main-font: "Microsoft Yi Baiti";
-$sub-font: JetBrains Mono;
-$bit-font: V323;
-$console-font: "Cascadia Code", sans-serif;
-
-//*****FONT-SIZES*****/
-$mainTitleSize: clamp(1.5rem, calc(1vw + 1rem), 5rem);
-$descriptionHeaderSize: clamp(3vh, calc(1vh + 0.5rem), 2.2rem);
-$mainDescriptionSize: clamp(0.5rem, calc(1vh + 0.1rem), 1.5rem);
-
-$redSize: 4vw;
-$mediumRedSize: 6vw;
-$widerRedSize: 7vw;
-$text: 3.2vh;
-$sPagesSize: 3vh;
-$subTitle: 1.0em;
-$SPageTitle: 18vw;
-$subpageTitle: 0px;
-$widerTitleSize: 20vw;
-
-//*****ETC*****//
-$bordersize: 2px solid #FFFFFF;
-$bordersizesmall: 1px solid #FFFFFF;
-
+// LOAD FONTS
 @font-face {
   font-family: "V323";
   src: url("/1_portfolioWebsite/fonts/VT323-Regular.ttf") format("truetype");
@@ -51,6 +31,34 @@ $bordersizesmall: 1px solid #FFFFFF;
     background-position: 1%;
   }
 }
+
+// FONTS
+$main-font: "Microsoft Yi Baiti";
+$code-font: JetBrains Mono;
+$bit-font: V323;
+$console-font: "Cascadia Code", sans-serif;
+
+// FONT SIZES
+$pageTitleSize: clamp(1.8rem, calc(1vw + 1rem), 5rem);
+$descriptionSize: clamp(0.58rem, calc(1vh + 0.2rem), 1.5rem);
+$downloadFontSize: clamp(0.51rem, 0.2vw + 0.3rem, 0.8rem);
+
+
+
+
+
+$descriptionHeaderSize: clamp(3vh, calc(1vh + 0.5rem), 2.2rem);
+$mainDescriptionSize: clamp(0.5rem, calc(1vh + 0.1rem), 1.5rem);
+$clientsSize: clamp(0.25rem, calc(1vh + 0.06rem), 1.5rem);
+$systemTitleSize: clamp(0.5rem, calc(0.8rem + 1vw), 1.3rem);
+
+
+
+// ETC
+$borderSize: 2px solid #FFFFFF;
+$borderSizeSmall: 1px solid #FFFFFF;
+
+/* ********** INIT END ********** */
 
 @mixin textanimation {
   // ANIMATIONSTART
@@ -108,43 +116,53 @@ $bordersizesmall: 1px solid #FFFFFF;
   }
 }
 
+//Three.JS
+// Removed unused #particle-canvas styles
+//Three.JS END
+
 // GLOBAL
 
 /* Global reset for box-sizing */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 
 * {
-  font-size: 4.5vh;
+  font-size: 3.5vh;
   font-family: $main-font;
   text-decoration: none;
-  color: white;
+  color: $lightDark;
 }
 
 html {
-  background-color: black;
   scroll-behavior: smooth;
+  overflow-x: hidden; // prevent accidental horizontal scrollbars globally
 }
+
 
 body {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: black;
+  color-scheme: dark;
 
 }
 
 p {
   font-family: $main-font;
   font-size: 2.5vh;
-  padding-bottom: 1vh;
+  padding-bottom: 0.9vh;
   opacity: 100%;
   word-break: break-word;
   word-wrap: normal;
   text-align: center;
   justify-content: center;
+  color: $darkLight;
 }
 
 br {
@@ -153,25 +171,17 @@ br {
   content: " ";
 }
 
-.mainText {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: auto;
-  position: relative;
-  padding-top: 0;
-  padding-bottom: 75px;
-  gap: 4vh;
-  text-align: center;
-  animation: fadeIn 0.5s;
-  margin-top: 110px;
-  bottom: 115px;
+.mainText{
+
+  background-color: green;
+
 }
 
 .indexText {
   position: absolute;
   font-size: 45px;
   font-family: $main-font;
+  color: $darkLight;
   left: 10px;
   top: 90px;
 }
@@ -182,15 +192,11 @@ br {
   position: absolute;
   left: 40px;
   top: 140px;
+  color: $darkLight;
 }
 
 // RESPONSIVE
 
-.responsiveThumb {
-  width: 100%;
-  max-width: 12em;
-  height: auto;
-}
 
 .responsiveSocial {
   width: 5vh;
@@ -198,11 +204,6 @@ br {
   height: auto;
 }
 
-.responsivePage {
-  width: 100%;
-  max-width: 23em;
-  height: auto;
-}
 
 .responsiveSystem {
   width: 100%;
@@ -218,199 +219,361 @@ br {
   margin-bottom: 0;
 }
 
-.systemsWrapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: auto;
-  position: relative;
-  padding-top: 78px;
-  padding-bottom: 5vh;
-  gap: 4vh;
-  text-align: center;
-  animation: fadeIn 0.5s;
-  // background: url(/img/test3.png);
-  background-size: cover;
-  background-position: center 0;
-  background-attachment: fixed;
-}
+// --------- DOWNLOADS ----------
 
 .downloadsWrapper {
-  display: grid;
+  flex-direction: column;
   justify-content: center;
-  width: auto;
   position: relative;
-  padding-top: 50px;
-  padding-bottom: 50px;
-  gap: 12vh;
   text-align: center;
   animation: fadeIn 0.5s;
+  margin: auto;
+  padding-top: 100px;
+  display: flex;
 }
 
-.visualWrapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: auto;
-  position: relative;
-  padding-top: 100px;
-  text-align: center;
-  animation: fadeIn 0.5s;
-  // background: url(/img/NOISE_BG2.jpg);
-  background-size: cover;
-  background-position: center 0;
-  background-attachment: fixed;
+.lastUpdated {
+  margin: auto;
 }
+
+.lastUpdated p {
+  font-family: $main-font;
+  font-size: $descriptionSize; // Changed from vh to vw for horizontal responsiveness
+  color: $darkLight;
+}
+
+
+.downloads{
+  margin: auto;
+  padding-top: 10vh;
+  display: grid;
+  gap: 7svh;
+}
+
+
+.downloadLink {
+  color: $darkLight;
+  font-family: $main-font;
+  font-size: $downloadFontSize;
+  padding: 1vh;
+  text-align: center;
+  text-decoration: underline currentColor 1px;
+  text-underline-offset: 7px;
+}
+
+
+// --------- DOWNLOADS ----------
+
+
 
 .aboutWrapper {
-  // background: url(/img/test2.png);
-  background-size: cover;
-  background-position: center 0;
-  background-attachment: fixed;
-}
 
-.pagewrapper {
-  display: grid;
-  opacity: 100%;
-  width: auto;
-  justify-content: center;
-  padding-top: 50px;
-  padding-bottom: 25px;
-  position: relative;
-  z-index: 10;
-  text-align: center;
-}
-
-.sWrapper {
-  display: grid;
-  gap: 0.2em;
-  padding-top: 0.3em; // Important: keeps items in view from menu bar (25px)
-}
-
-.infosection {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  opacity: 100%;
-  margin: 0.3rem 0;
-  width: auto;
-  justify-content: center;
-  gap: 3vh;
-  position: relative;
-  z-index: 10;
-  text-align: center;
-}
-
-.footer {
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-  font-family: V323, sans-serif;
-  opacity: 100%;
-  font-size: 2vh;
-  background-color: #000;
-}
-
-
-.footerWrapper {
-  gap: 3vh;
-  display: grid;
-  justify-content: center;
-  position: fixed;
-  bottom: 0;
+  padding-top: 100px;
   margin: auto;
-  z-index: 20;
-  width: 100%;
+  /* Allow vertical growth/scroll while preventing accidental horizontal scroll */
+  overflow-x: hidden;
+  overflow-y: visible;
+  /* Keep title in original spot (row 1) and center only the text box (row 2) */
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center; /* horizontal centering of children */
+  align-content: start;  /* keep grid content starting under the title */
+  /* Reserve space for fixed navbar (75px), the wrapper's own top padding (75px max), and a small footer buffer */
+  min-height: calc(100dvh - 75px - 75px - 50px);
+
+}
+
+.aboutBox {
+  display: grid;
+  place-content: center;
+  width: 90%;
+  max-width: 1280px;
+  z-index: 10;
+  padding-top: 2vh;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0 auto; // center the infoSection itself within the page
+}
+
+
+
+.about{
+  display: block;
   text-align: center;
-  background-color: #000;
+  padding: 10px;
+  background-color: rgba(10,10,10,.9);
+  border: 1px solid rgba(255,255,255,0.9);
+  //max-width: 650px; // keep a readable width
+  //margin: 0 auto;   // center the box if parent centering changes in future
+}
+
+.about p {
+  font-family: $main-font;
+  font-size: $descriptionSize;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.clients p{
+  line-height: 0.1px;
+  font-family: $code-font;
+  font-size: $clientsSize;
+  text-align: center;
 }
 
 .fadeWrapper {
-  padding-top: 75px;
   padding-bottom: 0;
-  animation: fadeIn 0.5s;
+  animation: fadeIn 3.5s;
   opacity: 1;
 }
 
-.gallery {
+//terminal_rect
+.terminal-cursor {
+  display: inline-block;
+  width: 0.4em;
+  height: 0.9em;
+  margin-left: 0.3em;
+  background: white; // warm amber like terminal highlight
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.85), 0 0 14px rgba(255,255, 255, 0.35);
+  vertical-align: -0.15em;
+  animation: cursor-blink 1.05s steps(1, end) infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-cursor { animation: none; }
+}
+
+// utility
+.with-cursor::after {
+  content: '';
+  @extend .terminal-cursor;
+}
+
+.systemsWrapper {
+  width: 100%;
+  height: 100vh; // Full viewport height
+  padding-top: 100px; // Account for navbar
+  animation: fadeIn 0.5s;
+  overflow: hidden; // Prevent scrollbars
+}
+
+/* ********** VISUAL ********** */
+
+// Visual Gallery - Horizontal scrolling with optimized space utilization
+
+
+// VISUAL GALLERY - Horizontal masonry with dense packing
+.visualWrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  padding-top: 97px; // navbar height
+  background-color: black;
+}
+
+.gallery-container {
+  height: 100%;
+  width: 100%;
+  padding: 0px;
+
+}
+
+// Replace the gallery-grid sizing block with a variable-driven version
+.gallery-grid {
+  // Rows/gaps can be tuned at breakpoints, but the math stays consistent
+  --rows: 23;
+  --gap: 8px;
+
+  // Available vertical space = dynamic viewport height - navbar - vertical padding
+  // Use dvh to avoid mobile browser UI shrinking the viewport visually
+  --avail: calc(100dvh - 75px - 24px);
+
+  // Unit size computed from the available height, rows, and gaps
+  --u: calc((var(--avail) - (var(--rows) - 1) * var(--gap)) / var(--rows));
+
+  display: grid;
+  grid-auto-flow: column dense;
+  grid-auto-columns: var(--u);
+  grid-template-rows: repeat(var(--rows), var(--u));
+  gap: var(--gap);
+
+  // Make the grid's box height exactly match the computed available height
+  // so nothing gets clipped at the bottom
+  height: var(--avail);
+
+  width: max-content; // keep horizontal growth for your JS scroller
+}
+
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+
+  &:hover {
+    transform: scale(1);
+    opacity: 75%;
+    z-index: 5;
+  }
+
+  img, iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+    object-fit: cover;
+  }
+}
+
+// Maintain the same span ratios
+.gallery-item.square {
+  grid-column: span 6;
+  grid-row: span 6;
+  aspect-ratio: 1/1;
+  border: 1px solid white;
+}
+
+.gallery-item.landscape {
+  grid-column: span 14;
+  grid-row: span 8;
+  aspect-ratio: 16/9;
+  border: 1px solid white;
+}
+
+.gallery-item.portrait {
+  grid-column: span 8;
+  grid-row: span 14;
+  aspect-ratio: 9/16;
+  border: 1px solid white;
+}
+
+// Keep your existing overlay and lightbox styles
+.item-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 55%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+
+
+  .gallery-item:hover & { opacity: 1; }
+
+  .item-info {
+    color: #fff;
+
+    .item-title {
+      font-family: $main-font;
+      font-size: 1.3vh;
+      font-weight: 200;
+      margin-bottom: 4px;
+      letter-spacing: .2px;
+      color: $darkLight;
+    }
+
+    .item-type {
+      font-family: $code-font;
+      font-size: 1.14vh;
+      opacity: 1;
+      color: $darkLight;
+    }
+  }
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .37s ease, visibility .37s ease;
+  z-index: 1000;
+
+  &.active { opacity: 1; visibility: visible; }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1vh;
+    right: 2vh;
+    background: none;
+    border: 0;
+    color: #fff;
+    cursor: pointer;
+    font-size: 5vh;
+    font-family: $code-font;
+  }
+
+  .lightbox-content {
+    max-width: 90%;
+    max-height: 80vh;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      max-width: 100%;
+      max-height: 80vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    iframe {
+      width: min(90vw, 1200px);
+      height: auto;
+      aspect-ratio: 16 / 9;
+      max-height: 80vh;
+      border: 0;
+
+      &.portrait-video {
+        aspect-ratio: 9 / 16;
+        width: auto;
+        height: 80vh;
+        max-width: 90vw;
+      }
+    }
+  }
+}
+
+// IMAGE VIEWER
+
+.images {
+  display: flex;
+  justify-content: center;
+  border: white 1px solid;
+  transition: transform 0.2s, opacity 0.3s;
   width: auto;
-  margin: 20px auto;
-  columns: 4;
-  column-gap: 20px;
-  box-sizing: border-box;
+  margin: 1vh;
 }
 
-@media (max-width: 1920px) {
-  .gallery {
-    columns: 4;
-  }
-}
-
-@media (max-width: 768px) {
-  .gallery {
-    columns: 2;
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery {
-    columns: 1;
-  }
-}
-
-@media (max-width: 1200px) {
-  .gallery {
-    width: calc(100% - 40px);
-    columns: 3;
-  }
-}
-
-@media (max-width: 768px) {
-  .gallery {
-    columns: 2;
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery {
-    columns: 1;
-  }
-}
-
-.gallery img {
-  max-width: 100%;
-  border-radius: 8px;
-  transition: all 1.5s ease;
-}
-
-.gallery img:hover {
-  box-shadow: 0 0 34px #333;
+.images:hover {
   cursor: pointer;
-  transition: opacity 0.12s;
   opacity: 70%;
-}
-
-.gallery .content {
-  padding: 4px;
-  break-inside: avoid;
-}
-
-.gallery .gallery-item {
-  transition: all 0.5s ease;
-  cursor: pointer;
-}
-
-.gallery .gallery-item:hover {
   transform: scale(1.025);
 }
 
-// FRONT_PAGE
+/* ********** VISUAL END ********** */
 
-.button {
-  height: 50%;
-  width: auto;
-}
 
+/* ********** NAVBAR ********** */
 .sitebutton {
   font-size: 3.5vh;
   font-family: $main-font;
@@ -418,11 +581,12 @@ br {
   height: auto;
   display: inline-block;
   padding: 0.23em 1em;
-  border: $bordersize;
+  border: $borderSize;
   margin: 0;
   border-radius: 0.1em;
   @include textanimation;
   background-color: black;
+  color: $darkLight
 }
 
 .socialbox {
@@ -450,77 +614,29 @@ br {
   display: flex;
   text-align: center;
   justify-content: center;
-  color:  $darkLight;
-  background-color: $lightDark;
-  font-size: $descriptionHeaderSize;
+  color:  $lightDark;
+  background-color: $darkLight;
+  font-size: 2vh;
 }
 
-[grid-col="auto"] {
-  flex: 1;
-}
-
-[grid-col="x10"] {
-  width: 33.33%;
-}
 
 .boxA {
   text-align: center;
   background-color: #000;
-  margin: auto;
 }
 
-.boxB {
-  text-align: center;
-  background-color: #000;
-  margin: auto;
-}
-
-.boxC {
-  width: 100%;
-  height: 200px; /* or any desired value */
-  position: relative;
-}
-
-
-.thumbnail {
-  padding: 2vh;
-}
-
-.downloadLink {
-  font-family: $bit-font;
-  font-size: 2.5vh;
-  padding: 1vh;
-  text-align: center;
-}
 
 a:hover .downloadLink {
-  text-decoration: underline;
-  text-underline-offset: 1vh;
-  text-decoration-thickness: 1px;
+  //text-decoration: underline;
+  //text-underline-offset: 1vh;
+  //text-decoration-thickness: 1px;
 }
 
-.link {
-  font-size: clamp(1.1rem, calc(0.5vw + 0.7rem), 5rem);
-  padding: 1vh;
-  display: inline-flex;
-  font-family: Navigation;
-}
 
-a:hover .link {
-  text-decoration: underline;
-  text-underline-offset: 1vh;
-  text-decoration-thickness: 1px;
-}
-
-// NAVBAR
-
-.navigation img {
-  background-color: black;
-  right: 10px;
-}
+/* ********** NAVBAR (NAVIGATION) ********** */
 
 #navbar {
-  background-color: black; /* Black background color */
+  background-color: black;
   position: fixed;
   height: 75px;
   top: 0; /* Make it stick/fixed */
@@ -533,28 +649,57 @@ a:hover #navbar {
   color: black;
 }
 
+.navigation img {
+  background-color: black;
+  right: 10px;
+}
+
 .navModal {
   position: fixed;
   z-index: 19;
   align-items: center;
   justify-content: center;
-  clip-path: ellipse(1px 1px at 1% 50%);
+  width: 100%;
+  height: 100%;
+  clip-path: circle(1px 1px at 1% 50%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 1);
+
+  // Closing: fade first, then instantly update visibility and clip-path (after fade)
+  transition:
+    opacity 0.3s ease-in-out,
+    visibility 0s linear 0.3s,
+    clip-path 0s linear 0.3s;
+
+  &.active {
+    clip-path: circle(5000px);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    // Opening: animate clip-path + opacity together, show visibility immediately
+    transition:
+      clip-path 0.35s ease-in-out,
+      opacity 0.3s ease-in-out,
+      visibility 0s;
+  }
 }
 
 .navWrapper {
   position: fixed;
   display: grid;
   opacity: 100%;
-  top: 75px;
+  top: 0;
   bottom: 0;
-  padding-top: 50px;
-  padding-bottom: 25px;
+  padding-top: 100px;
   height: auto;
   width: 100%;
-  max-height: 90%; // Try 70% - 80% for mobile viewport
+  max-height: 80%; // Try 70% - 80% for mobile viewport
   justify-content: center;
   text-align: center;
-  background-color: black;
+  margin: auto;
 }
 
 // ANIMATED CLOSE/OPEN
@@ -565,6 +710,7 @@ a:hover #navbar {
   right: 5%;
   transform: translate(-5%, -50%);
   cursor: pointer;
+  background-color: black;
 }
 
 .bar1,
@@ -595,10 +741,11 @@ a:hover #navbar {
   position: absolute;
   top: 0;
   right: 50%;
-  transform: translate(50%, 0);
-  height: 75px;
-  width: 75px;
+  transform: translate(50%, 8%);
+  height: 68px;
+  width: 68px;
   justify-content: center;
+  background-color: black;
 }
 
 .indexHomeLogo img {
@@ -611,114 +758,51 @@ a:hover #navbar {
   justify-content: center;
 }
 
-// IMAGE VIEWER
+/* ********** NAVBAR (NAVIGATION) END ********** */
 
-.images {
-  display: flex;
-  justify-content: center;
-  border: white 1px solid;
-  transition: transform 0.2s, opacity 0.3s;
-  width: auto;
-  margin: 1vh;
-}
-
-.images:hover {
-  cursor: pointer;
-  opacity: 70%;
-  transform: scale(1.025);
-}
-
-// THE IMGMODAL
-
-@keyframes zoom {
-  from {
-    transform: scale(0);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-.modal img {
-  margin: auto;
-  display: block;
-  width: auto;
-  height: auto;
-  max-height: 100%;
-  max-width: 100%;
-}
-
-// END MODAL
-
-.titletext {
-  font-size: clamp(1.1rem, calc(1vw + 1rem), 5rem);
-  font-family: Navigation;
-}
 
 // PORTFOLIO_PAGES
 
-.copyright {
-  font-size: 2vh;
-}
 
 .description {
   font-size: 4vw;
   padding-bottom: 1vh;
   font-family: $main-font;
+  color: $darkLight;
 }
 
-.aboutHeadline {
-  font-size: $redSize;
-  padding-bottom: 1vh;
-  display: flex;
-  justify-content: center;
-  text-align: center;
-}
+// 3D CAROUSEL (namespaced) START
+// Removed unused .carousel3d-container and .carousel3d styles
 
-.aboutBox {
-  display: block;
-  max-height: 775px;
-  overflow-y: scroll;
-  scroll-behavior: smooth;
-  text-align: center;
-  padding-left: 1.4vh;
-  padding-right: 1.4vh;
-  background-color: #000;
-  border: $bordersizesmall;
-  margin-left: 3vh;
-  margin-right: 3vh;
-}
 
-.aboutImg {
-  display: flex;
-  justify-content: center;
-  max-height: 850px;
-  margin: auto;
-  background-color: #000;
-  margin-left: 3vh;
-  margin-right: 0;
-}
+
+
 
 .pageTitle {
+  display: grid;
   position: relative;
-  align-items: flex-start;
   justify-content: center;
   margin: auto;
+  padding-bottom: 5vh;
   width: 100%;
   text-align: center;
-  font-size: $mainTitleSize;
-  font-family: Futura;
+  text-wrap: balance;
+  font-size: $pageTitleSize;
+  color: $darkLight;
 }
 
-.sPageTitle {
+.systemTitle {
+  display: grid;
   position: relative;
-  align-items: flex-start;
   justify-content: center;
   margin: auto;
+  padding-bottom: 3vh;
   width: 100%;
   text-align: center;
-  font-size: 9.2vw;
+  font-size: $systemTitleSize;
+  color: $darkLight;
 }
+
 
 .iframe-container {
   position: relative;
@@ -743,6 +827,8 @@ a:hover #navbar {
   font-size: $mainDescriptionSize;
   word-wrap: normal;
   font-family: $main-font;
+  color: $darkLight;
+  padding: 2.5vh;
 }
   //For links within the systems descriptions.
 
@@ -792,7 +878,7 @@ pre.shiki {
 html body .codeContainer pre.shiki,
 html body .codeContainer pre.shiki * {
   font-size: 0.26rem !important;
-  font-family: $sub-font !important;
+  font-family: $code-font !important;
 }
 
 .shiki code,
@@ -803,17 +889,6 @@ html body .codeContainer pre.shiki * {
 
 //********** Code Viewer / Shiki End **********
 
-// Downloads Exclusive
-
-.lastUpdated {
-  font-family: "JetBrains Mono", monospace;
-  font-size:  clamp(0.4vh, calc(0.4vh + 0.2rem), 1rem);
-  margin: auto;
-}
-
-.ul li {
-  font-size: 2vh;
-}
 
 .description {
   display: flex;
@@ -823,166 +898,115 @@ html body .codeContainer pre.shiki * {
 .techdescription {
   font-size: 2.5vh;
   margin-bottom: 1vh;
-  padding-top: 5px;
+  padding-top: 1vh;
   padding-bottom: 25px;
   font-family: $main-font;
+  word-wrap: normal;
+  text-align: center;
+  color: $darkLight;
 }
 
 
-// TWITCH_PLAYERS
+/* ********** FOOTER ********** */
 
-.twitch .itwitch-video iframe {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-}
-
-.twitch .itwitch-chat iframe {
-  width: 100%;
-  height: 100%;
-}
-
-.twitch {
-  position: relative;
-}
-
-.twitch .twitch-video iframe {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-}
-
-// CLIENTS
-
-.clients {
+.footer {
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  font-family: $code-font;
+  opacity: 100%;
+  font-size: 1.4vh;
   color: white;
-  position: relative;
-  align-items: flex-start;
-  justify-content: left;
+  background-color: #000;
+}
+
+.footerWrapper {
+  position: fixed;
+  gap: 3vh;
+  display: grid;
+  justify-content: center;
+  bottom: 0;
   margin: auto;
+  z-index: 2000;
   width: 100%;
-  margin-top: 110px;
-  text-align: left;
-  font-family: V323;
+  text-align: center;
+  background-color: #000;
 }
 
-.client {
-  font-size: 8vh;
-}
+/* ********** FOOTER END ********** */
 
-a:hover .client {
-  text-decoration: underline;
-  text-underline-offset: 1vh;
-  text-decoration-thickness: 1px;
-}
-
-// BOTTOMLOGO
-
-.openmedia img {
-  height: 13vh;
-  padding-bottom: 1vh;
-  padding-top: 15px;
-}
 
 /* ********** MOBILE ********** */
 
-@media screen and (min-width: 770px) {
-  .twitch {
-    position: relative;
-  }
-  .pagewrapper {
-    padding-top: 10px;
-  }
-  .reelWrap {
-    display: grid;
-    margin: 100px;
-  }
-}
+// Responsive adjustments - adjust row count and gaps for smaller screens
+
+
+
+
 
 @media screen and (min-width: 1700px) {
-  .footer {
-    font-size: 2.1vh;
-  }
-  .sWrapper {
-    margin-left: 6vh;
-    margin-right: 6vh;
-  }
+
+
 }
 
 @media only screen and (max-width: 1700px) and (min-width: 770px) {
-  .modal img {
-    margin: auto;
-    display: block;
-    width: auto;
-    height: auto;
-    max-height: 100%;
-    max-width: 100%;
-  }
-  .downloadLink {
-    text-decoration: underline;
-    text-underline-offset: 1vh;
-    text-decoration-thickness: 1px;
-  }
-  .reelWrap {
-    margin: 50px;
-  }
-  .sWrapper {
-    margin-left: 6vh;
-    margin-right: 6vh;
-  }
+
+
   .techdescription {
     font-size: 3.3vh;
   }
-  .aboutBox {
-    max-height: 57vh;
-    margin-left: 0;
-  }
-  .aboutImg {
-    margin-right: 0;
-    width: 100%;
-  }
-  .openmedia img {
-    height: 8vh;
-    padding-bottom: 1vh;
-    padding-top: 0;
-  }
+
+
+
 }
 
 @media only screen and (max-width: 950px) and (max-height: 500px) {
+  /* Landscape phones: let about section expand vertically */
+  .aboutWrapper { overflow-y: auto; }
+
   .footer {
-    font-size: 2vw;
+    font-size: 1.4vw;
   }
-  .sitebutton {
+
+
+  .downloads {
+    padding: 7vh;
+  }
+
+  .gallery-grid {
+    // Rows/gaps can be tuned at breakpoints, but the math stays consistent
+    --rows: 18;
+  }
+
+  .aboutWrapper {
+    max-height: 350px;
+  }
+
+
+  .aboutBox p {
+    /* Use width-based units in landscape phones so text remains readable */
     font-size: 1.5vw;
-    width: 35vw;
+    padding-top: 0;
   }
+
+
+  .clients p{
+    font-size: 0.9vw;
+  }
+
+
   .navWrapper {
-    padding-top: 25px;
-  }
-  .downloadLink {
-    font-size: 2.2vw;
-  }
-  .downloadsWrapper {
-    padding-top: 15px;
-  }
-  .pageTitle {
-    font-size: 7vw;
-  }
-  .aboutHeadline {
-    font-size: 2.5vw;
+    max-height: 90%;
+    padding-top: 75px;
   }
   p {
     font-size: 1.6vw;
   }
-  .reelWrap {
-    margin: 50px;
-  }
   .techdescription {
     font-size: 2vw;
   }
 }
+
 
 @media only screen and (min-width: 951px) and (max-height: 500px) {
   .footer {
@@ -991,57 +1015,14 @@ a:hover .client {
   .navWrapper {
     padding-top: 25px;
   }
-  .downloadLink {
-    font-size: 1.3vw;
-  }
-  .downloadsWrapper {
-    padding-top: 27px;
-  }
-  .aboutHeadline {
-    font-size: 2vw;
-  }
   .techdescription {
     font-size: 2vw;
   }
 }
 
 @media only screen and (max-width: 755px) {
-  .modal img {
-    margin: auto;
-    display: block;
-    width: 100%;
-    max-width: 100%;
-  }
 
-  .sWrapper {
-    margin-left: 2vh;
-    margin-right: 2vh;
-  }
 
-  .pagewrapper {
-    display: grid;
-    opacity: 100%;
-    width: auto;
-    justify-content: center;
-    gap: 1vh;
-    position: relative;
-    z-index: 10;
-    padding-top: 0;
-    text-align: center;
-  }
-  .infosection {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    opacity: 100%;
-    margin: 0.3rem 0;
-    width: auto;
-    justify-content: center;
-    gap: 3vh;
-    position: relative;
-    z-index: 10;
-    text-align: center;
-  }
 
   .description {
     display: flex;
@@ -1050,41 +1031,14 @@ a:hover .client {
     padding-bottom: 1vh;
     text-align: center;
   }
-  .reelWrap {
-    padding-bottom: 40px;
-  }
-  .aboutHeadline {
-    display: flex;
-    justify-content: center;
-    font-size: $widerRedSize;
-    padding-bottom: 1vh;
-    text-align: center;
-  }
-  .openmedia img {
-    height: 6vh;
-    padding-bottom: 1vh;
-    padding-top: 0;
-  }
-  .gallery {
-    grid-template-columns: repeat(auto-fill, minmax(50%, 1fr));
-  }
-  .downloadLink {
-    text-decoration: underline;
-    text-underline-offset: 1vh;
-    text-decoration-thickness: 1px;
-  }
+
+
   .indexSubText {
     left: 40px;
     font-size: 23px;
   }
-  .downloadLink {
-    text-decoration: underline;
-    text-underline-offset: 1vh;
-    text-decoration-thickness: 1px;
-  }
-  .aboutBox {
-    max-height: 300px;
-  }
+
+
   p {
     font-size: 2.2vh;
   }
@@ -1093,50 +1047,20 @@ a:hover .client {
   }
 }
 
-/* ********** MOBILE_END ********** */
 
-/* ********** IPAD AND TABLETS ONLY ********** */
+/* ********** MOBILE END ********** */
+
+
+/* ********** TABLETS ********** */
 @media screen and (min-width: 760px) and (max-width: 1120px) and (min-height: 1020px) and (max-height: 1400px) {
   p {
     font-size: 1.5vh;
   }
-  .aboutBox {
-    margin-left: 0;
-    margin-right: 3vh;
-    max-height: 400px;
-  }
-  .openmedia img {
-    height: 5vh;
-    padding-bottom: 1vh;
-    padding-top: 0;
-  }
-  .sWrapper {
-    margin-left: 2vh;
-    margin-right: 2vh;
-  }
+
   .techdescription {
     font-size: 3.4vw;
   }
-  .copyright {
-    font-size: 1.3vh;
-  }
-  .infosection {
-    display: grid;
-    padding-top: 4vh;
-    padding-bottom: 1vh;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    align-self: stretch;
-    gap: 1vh;
-  }
-  .footer {
-    font-size: 1.8vh;
-  }
-  .aboutImg {
-    margin-left: 3vh;
-    margin-right: 0;
-    width: 100%;
-  }
+
 }
 
-//*********** END **********
+/* ********** TABLETS END ********** */

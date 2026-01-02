@@ -2,116 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-    <link rel="stylesheet" href= "/css/style.css">
-    <title>DIGITIZEDNOISE - VISUAL</title>
-    <link rel="shortcut icon" type="image/png" href="/img/dNOISE_LOGO 300x300.png"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VISUAL ART DIGITIZEDNOISE">
+    <link rel="preload" href="/css/style.css" as="style">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="shortcut icon" type="image/png" href="/img/dNOISE_LOGO 300x300.png">
+    <title>.dn_VISUALS</title>
 </head>
-<body>   
-    <div class ="siteWrapper">
-        <div class="navModal">
+<body>
+    <div class="siteWrapper">
+        <nav class="navModal" aria-label="Main Navigation">
             <div class="navWrapper">
-                <!--<a href = "/audio.html" class="button">
-                    <div class = "sitebutton">AUDIO</div>
-                </a>!-->
-                <a href = "/visual.html" class="button">
-                    <div class = "sitebutton">VISUAL</div>
-                </a>
-                <a href = "/systems.html" class="button">
-                    <div class = "sitebutton">SYSTEMS</div>
-                </a>
-                <a href = "/about.html" class="button">
-                    <div class = "sitebutton">ABOUT</div>
-                </a>
-                <a href = "/downloads.html" class="button">
-                    <div class = "sitebutton">DOWNLOADS</div>
-                </a>
-                <a href = "mailto:contact@digitizednoise.com" target="_blank" rel="noopener noreferrer" class="button">
-                    <div class = "sitebutton">CONTACT</div>
-                </a>
-                <div class = "socialbox">
-                    <a href = "https://www.instagram.com/digitizednoise/">
-                        <div class = "socialbutton"><img src="img/instagram.png" class="responsiveSocial"></div>
+                <!--<a href = "/clients.html" class="button"> <div class = "sitebutton">CLIENTS</div></a>!-->
+                <a href="/visual.html" class="button" ><div class="sitebutton">VISUAL</div></a>
+                <a href="/systems.html" class="button"><div class="sitebutton">SYSTEMS</div></a>
+                <a href="/about.html" class="button"><div class="sitebutton">ABOUT</div></a>
+                <a href="/downloads.html" class="button"><div class="sitebutton">DOWNLOADS</div></a>
+                <a href="mailto:contact@digitizednoise.com" class="button"><div class="sitebutton">CONTACT</div></a>
+                <a></a>
+                <div class="socialbox">
+                    <a href="https://www.instagram.com/digitizednoise/" target="_blank" rel="noopener" aria-label="Instagram">
+                        <div class="socialbutton"><img src="img/instagram.png" alt="" class="responsiveSocial" loading="lazy"></div>
                     </a>
-                    <a href = "https://twitter.com/digitizednoise" target="_blank" rel="noopener noreferrer">
-                        <div class = "socialbutton"><img src="img/twitter.png" class="responsiveSocial"></div>
+                    <a href="https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" target="_blank" rel="noopener" aria-label="YouTube">
+                        <div class="socialbutton"><img src="img/youtube.png" alt="" class="responsiveSocial" loading="lazy"></div>
                     </a>
-                    <a href = "https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" target="_blank" rel="noopener noreferrer">
-                        <div class = "socialbutton"><img src="img/youtube.png" class="responsiveSocial"></div>
+                    <a href="https://www.twitch.tv/digitizednoise" target="_blank" rel="noopener" aria-label="Twitch">
+                        <div class="socialbutton"><img src="img/twitch.png" alt="" class="responsiveSocial" loading="lazy"></div>
                     </a>
-                    <a href = "https://www.twitch.tv/digitizednoise" target="_blank" rel="noopener noreferrer">
-                        <div class = "socialbutton"><img src="img/twitch.png" class="responsiveSocial"></div>
-                    </a>
-                    <a href = "https://tiktok.com/@digitizednoise">
-                        <div class = "socialbutton"><img src="img/tiktok.png" class="responsiveSocial"></div>
+                    <a href="https://tiktok.com/@digitizednoise" target="_blank" rel="noopener" aria-label="TikTok">
+                        <div class="socialbutton"><img src="img/tiktok.png" alt="" class="responsiveSocial" loading="lazy"></div>
                     </a>
                 </div>
             </div>
-        </div>
+        </nav>
         <div class="indexWrapper">
-            <div class = "navigation" id="navbar">
-                <div class = "homelogo">
-                    <a href="/index.html"><img src ="img/dnoizelogo.png"></a>
+            <header class="navigation" id="navbar">
+                <div class="homelogo">
+                    <a href="/index.html"><img src="img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
                 </div>
-                <div class ="menubar" id="navmenu">
+                <div class="menubar" id="navmenu" aria-label="Menu" aria-expanded="false">
                     <div class="bar1"></div>
                     <div class="bar2"></div>
                     <div class="bar3"></div>
                 </div>
-            </div>
-            <div class = "footerWrapper">
-                <div class = "footer">> contact@digitzednoise.com</div>
-            </div>
+            </header>
+            <footer class="footerWrapper">
+                <div class="footer">> contact@digitizednoise.com</a></div>
+            </footer>
         </div>
     </div>
-    <div class = "visualWrapper">
-        <div class = "pagetitle">ARTWORKS</div>
-            <div class="gallery" id="gallery">
-                <div class="gallery-item">
-                    <div class="content"><img src="/gif/moongif.gif" alt=""></div>
+    <main class="visualWrapper">
+        <div class="gallery-container">
+            <div class="gallery gallery-grid" id="gallery">
+                <div class="gallery-item landscape" onclick="openLightbox(this)" data-vimeo="838015780">
+                    <iframe src="https://player.vimeo.com/video/838015780?background=1&muted=1" title="Continue?" loading="lazy" allow="autoplay; fullscreen"></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/img/art_2.jpg" alt=""></div>
+                <div class="gallery-item portrait" onclick="openLightbox(this)">
+                    <img src="/img/art_5.webp" alt="Vertical Vision artwork" loading="lazy">
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/img/art_4.jpg" alt=""></div>
+                <div class="gallery-item portrait" onclick="openLightbox(this)" data-vimeo="1112150335">
+                    <iframe src="https://player.vimeo.com/video/1112150335?background=1&muted=1" title="Motion Study video" loading="lazy" allow="autoplay; fullscreen"></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/gif/ffgif.gif" alt=""></div>
+                <div class="gallery-item square" onclick="openLightbox(this)">
+                    <img src="/img/art_1.jpg" alt="Geometric Forms artwork" loading="lazy">
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="img/art_6.png" alt=""></div>
+                <div class="gallery-item landscape" onclick="openLightbox(this)">
+                    <img src="/img/bryce3D_1.jpg" alt="Wide Perspective artwork" loading="lazy">
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Bryce 3D</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/img/art_7.png" alt=""></div>
+                <div class="gallery-item landscape" onclick="openLightbox(this)">
+                    <img src="/img/gits.webp" alt="Horizon Line artwork" loading="lazy">
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/gif/artgif8.gif" alt=""></div>
+                <div class="gallery-item landscape" onclick="openLightbox(this)">
+                    <iframe src="https://www.youtube.com/embed/pvkrDA8gOjA?si=7uin04bDXSORycl5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" loading="lazy" ></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/gif/artgif2.gif" alt=""></div>
+                <div class="gallery-item portrait" onclick="openLightbox(this)" data-vimeo="1112190356">
+                    <iframe src="https://player.vimeo.com/video/1112190356?background=1&muted=1" title="Psycho !STROBE WARNING!" loading="lazy" allow="autoplay; fullscreen"></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/img/bryce3D_1.jpg" alt=""></div>
+                <div class="gallery-item landscape" onclick="openLightbox(this)">
+                    <img src="/img/art_6.webp" alt="Cinematic Piece artwork" loading="lazy">
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/img/art_5.png" alt=""></div>
+                <div class="gallery-item square" onclick="openLightbox(this)" data-vimeo="1112619462">
+                    <iframe src="https://player.vimeo.com/video/1112619462?background=1&muted=1" title="Continue?" loading="lazy" allow="autoplay; fullscreen"></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/gif/artgif3.gif" alt=""></div>
+                <div class="gallery-item square" onclick="openLightbox(this)" data-vimeo="1112187667">
+                    <iframe src="https://player.vimeo.com/video/1112187667?background=1&muted=1" title="Continue?" loading="lazy" allow="autoplay; fullscreen"></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/img/art_1.jpg" alt=""></div>
+                <div class="gallery-item landscape" onclick="openLightbox(this)">
+                    <iframe src="https://www.youtube.com/embed/TEt6PDIrmRU?si=7uin04bDXSORycl5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" loading="lazy" ></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/gif/artgif7.gif" alt=""></div>
+                <div class="gallery-item landscape" onclick="openLightbox(this)" data-vimeo="1112797295">
+                    <iframe src="https://player.vimeo.com/video/1112797295?background=1&muted=1" title="Continue?" loading="lazy" allow="autoplay; fullscreen"></iframe>
+                    <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
                 </div>
-                <div class="gallery-item">
-                    <div class="content"><img src="/gif/artgif6.gif" alt=""></div>
-                </div>
-            </div>          
-    </div>
-    <script src="/script.js"></script>                                                                 
+            </div>
+        </div>
+        <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+            <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">x</button>
+            <div class="lightbox-content" id="lightboxContent"></div>
+        </div>
+    </main>
+    <script src="js/horizontal-scroll.js" defer></script>
+    <script src="/js/gallery.js" defer></script>
+    <script src="/js/script.js" defer></script>
 </body>
 </html>
