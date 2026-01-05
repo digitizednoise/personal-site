@@ -7,17 +7,17 @@
     <link rel="preload" href="/css/style.css" as="style">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="shortcut icon" type="image/png" href="/img/dNOISE_LOGO 300x300.png">
-    <title>.dn_ABOUT</title>
+    <title>ABOUT - DIGITIZEDNOISE</title>
 </head>
 <body>
     <div class="siteWrapper">
         <nav class="navModal" aria-label="Main Navigation">
             <div class="navWrapper">
                 <!--<a href = "/clients.html" class="button"> <div class = "sitebutton">CLIENTS</div></a>!-->
-                <a href="/visual.html" class="button" ><div class="sitebutton">VISUAL</div></a>
-                <a href="/systems.html" class="button"><div class="sitebutton">SYSTEMS</div></a>
-                <a href="/about.html" class="button"><div class="sitebutton">ABOUT</div></a>
-                <a href="/downloads.html" class="button"><div class="sitebutton">DOWNLOADS</div></a>
+                <a href="/visual" class="button" ><div class="sitebutton">VISUAL</div></a>
+                <a href="/systems" class="button"><div class="sitebutton">SYSTEMS</div></a>
+                <a href="/about" class="button"><div class="sitebutton">ABOUT</div></a>
+                <a href="/downloads" class="button"><div class="sitebutton">DOWNLOADS</div></a>
                 <a href="mailto:contact@digitizednoise.com" class="button"><div class="sitebutton">CONTACT</div></a>
                 <a></a>
                 <div class="socialbox">
@@ -39,7 +39,7 @@
         <div class="indexWrapper">
             <header class="navigation" id="navbar">
                 <div class="homelogo">
-                    <a href="/index.html"><img src="img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
+                    <a href="/index"><img src="img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
                 </div>
                 <div class="menubar" id="navmenu" aria-label="Menu" aria-expanded="false">
                     <div class="bar1"></div>
@@ -57,8 +57,7 @@
             <div class = "pageTitle">ABOUT</div>
             <div class="aboutBox">
                 <div class = 'about'>
-                    <p>My main focus is creating real-time audio/visual art, generating intense audio-reactive environments both in the digital and physical; and developing new ways to synchronize the physical and digital world further.
-                        I have been heavily invested in art and technology as a child; learning to first create electronic music using Logic Pro 9 and have been on the long journey of curating and refining my sonic palette ever since learning to first create electronic music using Logic Pro 9 and have been on the long journey of curating and refining my sonic palette ever since</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ab ad aliquid cum dignissimos distinctio eos et eum facere illo labore laborum, modi pariatur quam quas, reiciendis sapiente sed totam. Ab atque beatae commodi dicta dolorem excepturi officiis quaerat quam quasi rerum. At beatae eos error est excepturi hic ipsa iure, maiores minima minus nemo non numquam optio, quasi quidem quo ratione temporibus voluptates. Accusantium adipisci amet architecto aspernatur assumenda aut corporis culpa distinctio dolorem dolores ducimus eaque earum et, exercitationem iste magni minus modi, mollitia nam nobis qui quibusdam reiciendis rem sed ullam velit veritatis. Ab accusantium ad aliquam aliquid at consequatur cumque dolor eos eum eveniet ex fugit illo, illum incidunt iusto maxime nemo neque odio omnis optio placeat quod, ratione recusandae sapiente sequi soluta velit veniam veritatis vero voluptatum? Architecto assumenda commodi delectus dignissimos dolore, ducimus exercitationem in ipsam laboriosam maxime minus molestiae mollitia officiis optio possimus quasi quidem rem similique temporibus, velit. Ab aliquid aperiam architecto beatae dicta dolorum eligendi, error et facere harum illum in magni minus molestias natus nesciunt praesentium qui reiciendis repellat similique sunt tenetur vitae. Consequuntur earum, et facere magnam non omnis perspiciatis porro sint tempore ullam. Dicta expedita ipsa quibusdam quis sed!</p>
                     <!--<div class = "logoWrapper">
                         <div class = "openmedia"><img src="/img/dnoizelogo.png"></div>
                     </div>!-->
@@ -66,21 +65,39 @@
                     <p></p>
                     <p style="font-weight: bold">CLIENTS</p>
                     <p></p>
-                    <p>2024 | KAWAI | NAMM ANAHEIM CONVENTION</p>
-                    <p>CENTER </p>
+                    <p>
+                        <a href="https://vimeo.com/1002176266?fl=tl&fe=ec"
+                           data-vimeo="1002176266"
+                           onclick="openLightbox(this); return false;">
+                            2024 | KAWAI | NAMM ANAHEIM CONVENTION
+                            <p>CENTER </p>
+                        </a>
+                    </p>
                     <p>2024 | ULTIMATE SOUND AND LIGHTING | </p>
                     <p>REDONDO BEACH</p>
                     <p>2023 | 6AM & DIRTY EPIC EVENTS</p>
                     <p> | DOWNTOWN LOS ANGELES</p>
                 </div>
-                    <p></p>
-                    <p class="with-cursor">This website was developed by myself and is currently maintained by myself.</p>
-                </div>
+
+                <p></p>
+                <p class="with-cursor">This website was developed and currently maintained by myself.</p>
             </div>
         </div>
     </div>
-    <script src="/js/script.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-    <script src="/js/perlin.js"></script>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">x</button>
+    <div class="lightbox-content" id="lightboxContent"></div>
+</div>
+
+<script src="/js/script.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+
+<!-- Vimeo Player API (safe to include; gallery.js checks for it) -->
+<script src="https://player.vimeo.com/api/player.js" defer></script>
+<script src="/js/gallery.js" defer></script>
+
+<script src="/js/perlin.js"></script>
 </body>
 </html>
