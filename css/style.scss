@@ -303,7 +303,7 @@ br {
   padding: 10px;
   background-color: rgba(.5,.5,.5,.9);
   border: 1px solid rgba(255,255,255,0.9);
-  //max-width: 650px; // keep a readable width
+  //max-height: 650px; // keep a readable width
   //margin: 0 auto;   // center the box if parent centering changes in future
 }
 
@@ -312,6 +312,30 @@ br {
   font-size: $descriptionSize;
   line-height: 1.7;
   text-align: center;
+}
+
+.clients {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.clients-caret {
+  position: absolute;
+  top: 0;
+  left: -3px;
+  font-family: $code-font;
+  font-size: calc(#{$clientsSize} * 1.3);
+  color: white; // Fallback
+  color: $darkLight; // Ensure it's visible (white in dark mode)
+  pointer-events: none;
+  z-index: 20; // High enough to be on top of everything in the section
+  opacity: 0;
+  line-height: 1.25;
+}
+
+.clients-caret.visible {
+  opacity: 1;
 }
 
 .clients p{
@@ -326,15 +350,61 @@ br {
   color: inherit;
   font-family: inherit;
   font-size: inherit;
-  line-height: inherit;
+
+  /* IMPORTANT: don't inherit the parent's 0.1px line-height */
+  line-height: 1.2;
+
   text-decoration: none;
   cursor: pointer;
+
+  /* smooth in/out */
+  transition: background-color 0.3s ease-in-out;
+
+  /* make the highlight look like a highlight */
+  display: inline-block;
+  padding: 0.08em 0.2em 0.08em 1.2em; /* left includes caret space */
+  border-radius: 2px;
+
+  position: relative;
+
+  /* if a line wraps, keep the highlight per-line (nice polish) */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
-/* Optional: keep it from changing color after visiting */
-.clients p a:visited {
-  color: inherit;
+/* the ">" caret (REMOVE original static carets) */
+.clients p a::before {
+  content: none;
+
 }
+
+/* Desktop/laptop: real hover */
+@media (hover: hover) and (pointer: fine) {
+  .clients p a:hover {
+    background-color: blue;
+  }
+}
+
+/* Mobile/tablet: tap/focus feedback */
+@media (hover: none) and (pointer: coarse) {
+  .clients p a:active,
+  .clients p a:focus {
+    background-color: blue;
+  }
+}
+
+/* Keyboard accessibility */
+.clients p a:focus-visible {
+  background-color: blue;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* REMOVE this duplicate rule if it's still in your file:
+.clients p a:hover {
+  background-color: blue;
+}
+*/
 
 .fadeWrapper {
   padding-bottom: 0;
@@ -445,12 +515,33 @@ br {
   }
 
   // Add 'iframe' to this list so it stretches to fill the box too
-  img, video, iframe { 
+  img, video { 
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
     border: 0;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border: 0;
+    pointer-events: none;
+  }
+
+  .vimeo-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
   }
 }
 
@@ -514,7 +605,7 @@ br {
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.99);
+  background: rgba(0,0,0,0.9);
   display: flex;
   align-items: center;
   justify-content: center;

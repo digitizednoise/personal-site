@@ -134,28 +134,33 @@ class DN_Particle {
 }
 
 function windowResized() {
-    // Capture the current canvas content before resizing
-    let canvasImage = get();
+    // Debounce so we don't clear/repaint 60 times while dragging the window size
+    clearTimeout(window.__dnResizeTimer);
+    window.__dnResizeTimer = setTimeout(() => {
+        // Capture the current canvas content BEFORE resizing
+        const canvasImage = get();
 
-    // Resize the canvas
-    resizeCanvas(windowWidth, windowHeight);
+        // Resize the canvas (this clears it)
+        resizeCanvas(windowWidth, windowHeight);
 
-    // Restore the captured content
-    image(canvasImage, 0, 0);
+        // Restore what we had, scaled to fill the new canvas
+        // (prevents newly exposed area from being black)
+        image(canvasImage, 0, 0, width, height);
 
-    // Update grid dimensions for the new canvas size
-    dn_cols = floor(width / dn_scl) + 1;
-    dn_rows = floor(height / dn_scl) + 1;
+        // Update grid dimensions for the new canvas size
+        dn_cols = floor(width / dn_scl) + 1;
+        dn_rows = floor(height / dn_scl) + 1;
 
-    // Handle particles that might be outside the new bounds
-    for (let i = 0; i < dn_particles.length; i++) {
-        if (dn_particles[i].pos.x > width) {
-            dn_particles[i].pos.x = width - 10;
+        // Keep particles in-bounds and keep their trails continuous
+        for (let i = 0; i < dn_particles.length; i++) {
+            if (dn_particles[i].pos.x > width) {
+                dn_particles[i].pos.x = width - 10;
+            }
+            if (dn_particles[i].pos.y > height) {
+                dn_particles[i].pos.y = height - 10;
+            }
             dn_particles[i].prevPos.x = dn_particles[i].pos.x;
-        }
-        if (dn_particles[i].pos.y > height) {
-            dn_particles[i].pos.y = height - 10;
             dn_particles[i].prevPos.y = dn_particles[i].pos.y;
         }
-    }
+    }, 120);
 }

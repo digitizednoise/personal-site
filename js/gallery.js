@@ -161,7 +161,41 @@
   window.openLightbox = openLightbox;
   window.closeLightbox = closeLightbox;
 
-  window.addGalleryItem = function(type, src, title, itemType, vimeoId = null, youtubeId = null) {
+  function setupVimeoPlaceholders() {
+    if (!window.Vimeo?.Player) return;
+
+    getBackgroundVimeoIframes().forEach((iframe) => {
+      const item = iframe.closest('.gallery-item');
+      if (!item) return;
+
+      const placeholder = item.querySelector('.vimeo-placeholder');
+      if (!placeholder) return;
+
+      const player = new Vimeo.Player(iframe);
+      
+      // When the video starts playing, fade out the placeholder
+      player.on('play', function() {
+        placeholder.style.opacity = '0';
+      });
+
+      // Also check if it's already playing (e.g. if it loaded before JS)
+      player.getPaused().then(paused => {
+        if (!paused) {
+          placeholder.style.opacity = '0';
+        }
+      });
+    });
+  }
+
+  // Initialize on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupVimeoPlaceholders);
+  } else {
+    // Small delay to ensure Vimeo API is fully ready if needed
+    setTimeout(setupVimeoPlaceholders, 100);
+  }
+
+  window.addGalleryItem = function(type, src, title, itemType, vimeoId = null, youtubeId = null, placeholderSrc = null) {
     const gallery = document.getElementById('gallery');
     if (!gallery) return;
     const item = document.createElement('div');
@@ -172,6 +206,7 @@
       item.setAttribute('data-vimeo', vimeoId);
       item.innerHTML = `
         <iframe src="https://player.vimeo.com/video/${vimeoId}?background=1&muted=1" frameborder="0"></iframe>
+        ${placeholderSrc ? `<img src="${placeholderSrc}" class="vimeo-placeholder" alt="">` : ''}
         <div class="item-overlay">
             <div class="item-info">
                 <div class="item-title">${title}</div>
@@ -179,6 +214,15 @@
             </div>
         </div>
       `;
+
+      if (placeholderSrc && window.Vimeo?.Player) {
+        const iframe = item.querySelector('iframe');
+        const player = new Vimeo.Player(iframe);
+        player.on('play', () => {
+          const p = item.querySelector('.vimeo-placeholder');
+          if (p) p.style.opacity = '0';
+        });
+      }
     } else if (youtubeId) {
       item.setAttribute('data-youtube', `https://www.youtube.com/embed/${youtubeId}`);
       item.innerHTML = `

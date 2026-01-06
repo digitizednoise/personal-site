@@ -62,22 +62,34 @@
                         <div class = "openmedia"><img src="/img/dnoizelogo.png"></div>
                     </div>!-->
                 <div class = "clients">
-                    <p></p>
-                    <p style="font-weight: bold">CLIENTS</p>
-                    <p></p>
-                    <p>
-                        <a href="https://vimeo.com/1002176266?fl=tl&fe=ec"
-                           data-vimeo="1002176266"
-                           onclick="openLightbox(this); return false;">
-                            2024 | KAWAI | NAMM ANAHEIM CONVENTION
-                            <p>CENTER </p>
-                        </a>
-                    </p>
-                    <p>2024 | ULTIMATE SOUND AND LIGHTING | </p>
-                    <p>REDONDO BEACH</p>
-                    <p>2023 | 6AM & DIRTY EPIC EVENTS</p>
-                    <p> | DOWNTOWN LOS ANGELES</p>
-                </div>
+    <span class="clients-caret" aria-hidden="true">&gt;</span>
+
+    <p></p>
+    <p style="font-weight: bold">CLIENTS</p>
+    <p></p>
+
+    <p>
+        <a href="https://vimeo.com/1002176266?fl=tl&fe=ec"
+           data-vimeo="1002176266"
+           onclick="openLightbox(this); return false;">
+            2024 | KAWAI PIANOS | NAMM ANAHEIM CONVENTION CENTER
+        </a>
+    </p>
+    <p>
+        <a href="https://vimeo.com/1151814950?fl=ip&fe=ec"
+           data-vimeo="1151814950"
+           onclick="openLightbox(this); return false;">
+            2024 | ULTIMATE SOUND AND LIGHTING | REDONDO BEACH
+        </a>
+    </p>
+    <p>
+        <a href="https://vimeo.com/1151804758?fl=ip&fe=ec"
+           data-vimeo="1151804758"
+           onclick="openLightbox(this); return false;">
+            2023 | 6AM & DIRTY EPIC EVENTS | DOWNTOWN LOS ANGELES
+        </a>
+    </p>
+</div>
 
                 <p></p>
                 <p class="with-cursor">This website was developed and currently maintained by myself.</p>
@@ -93,11 +105,10 @@
 
 <script src="/js/script.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-
-<!-- Vimeo Player API (safe to include; gallery.js checks for it) -->
 <script src="https://player.vimeo.com/api/player.js" defer></script>
 <script src="/js/gallery.js" defer></script>
 
+<script src="/js/clients-caret.js" defer></script>
 <script src="/js/perlin.js"></script>
 </body>
 </html>
