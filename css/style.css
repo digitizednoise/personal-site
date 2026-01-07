@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* ********** INIT ********** */
 @font-face {
   font-family: "V323";
@@ -136,7 +137,7 @@ br {
 
 .lastUpdated p {
   font-family: "Microsoft Yi Baiti";
-  font-size: clamp(0.58rem, 1vh + 0.2rem, 1.5rem);
+  font-size: clamp(0.28rem, 1vh + 0.25rem, 1.5rem);
   color: light-dark(black, white);
 }
 
@@ -157,44 +158,96 @@ br {
   text-underline-offset: 7px;
 }
 
+/* ********** ABOUT ********** */
 .aboutWrapper {
   padding-top: 100px;
   margin: auto;
   /* Allow vertical growth/scroll while preventing accidental horizontal scroll */
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: hidden;
   /* Keep title in original spot (row 1) and center only the text box (row 2) */
-  display: grid;
   grid-template-rows: auto 1fr;
   justify-items: center; /* horizontal centering of children */
   align-content: start; /* keep grid content starting under the title */
-  /* Reserve space for fixed navbar (75px), the wrapper's own top padding (75px max), and a small footer buffer */
-  min-height: calc(100dvh - 75px - 75px - 50px);
+  /* Reserve space for fixed navbar (75px) and a small footer buffer (50px) */
+  /* This ensures the wrapper spans the visible area for better vertical centering of row 2 */
+  min-height: calc(100dvh - 50px);
 }
 
 .aboutBox {
   display: grid;
+  /* Center the about content box vertically and horizontally */
   place-content: center;
-  width: 90%;
-  max-width: 1280px;
+  /* Cleaner centering */
+  width: min(1280px, 100%);
+  margin-inline: auto;
+  /* Symmetrical padding for better vertical centering visual */
+  padding-block: clamp(20px, 0vh, 60px);
+  padding-inline: clamp(35px, 4vw, 20px);
+  padding-block-end: calc(clamp(20px, 5vh, 60px) + env(safe-area-inset-bottom, 0px));
   z-index: 10;
-  padding-top: 2vh;
-  justify-content: center;
   box-sizing: border-box;
-  margin: 0 auto;
+  /* Optional: slightly reduce perceived “wide” text on large screens */
+  /* max-width: 72ch; */
+}
+@media (max-width: 755px) {
+  .aboutBox {
+    /* Keep centering on mobile to satisfy "everything centered" */
+    place-content: center;
+    padding-block-end: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .about {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   padding: 10px;
   background-color: rgba(0.5, 0.5, 0.5, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.9);
+  max-height: 65vh;
+  overflow-y: auto;
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0) transparent;
+  transition: scrollbar-color 0.3s ease-in-out;
+  /* Webkit-based browsers */
+}
+.about:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.8) transparent;
+}
+.about::-webkit-scrollbar {
+  width: 6px;
+}
+.about::-webkit-scrollbar-track {
+  background: transparent;
+}
+.about::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0);
+  border-radius: 10px;
+  transition: background-color 0.3s ease-in-out;
+}
+.about:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.bioContent {
+  display: contents;
+}
+
+.bioText {
+  order: 1;
+  width: 100%;
+}
+
+.maintainedText {
+  order: 3;
+  width: 100%;
 }
 
 .about p {
   font-family: "Microsoft Yi Baiti";
-  font-size: clamp(0.58rem, 1vh + 0.2rem, 1.5rem);
+  font-size: clamp(0.28rem, 1vh + 0.25rem, 1.5rem);
   line-height: 1.7;
   text-align: center;
 }
@@ -203,20 +256,21 @@ br {
   position: relative;
   display: inline-block;
   width: 100%;
+  order: 2;
 }
 
 .clients-caret {
   position: absolute;
   top: 0;
-  left: -3px;
-  font-family: JetBrains Mono;
-  font-size: calc(clamp(0.25rem, 1vh + 0.06rem, 1.5rem) * 1.3);
+  left: -10px;
+  font-family: V323;
+  font-size: calc(clamp(0.25rem, 1vh + 0.06rem, 1.5rem) * 1.7);
   color: white;
   color: light-dark(black, white);
   pointer-events: none;
   z-index: 20;
   opacity: 0;
-  line-height: 1.25;
+  line-height: 1;
 }
 
 .clients-caret.visible {
@@ -243,7 +297,7 @@ br {
   transition: background-color 0.3s ease-in-out;
   /* make the highlight look like a highlight */
   display: inline-block;
-  padding: 0.08em 0.2em 0.08em 1.2em; /* left includes caret space */
+  padding: 0.08em 0.2em;
   border-radius: 2px;
   position: relative;
   /* if a line wraps, keep the highlight per-line (nice polish) */
@@ -327,6 +381,7 @@ br {
   overflow: hidden;
 }
 
+/* ********** ABOUT END ********** */
 /* ********** VISUAL ********** */
 .visualWrapper {
   position: relative;
@@ -455,18 +510,22 @@ br {
 .lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.37s ease, visibility 0.37s ease;
-  z-index: 1000;
+  transition: opacity 0.37s ease, visibility 0.37s ease, backdrop-filter 0.37s ease, -webkit-backdrop-filter 0.37s ease;
+  z-index: 3000;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 .lightbox.active {
   opacity: 1;
   visibility: visible;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .lightbox .lightbox-close {
   position: absolute;
@@ -863,7 +922,36 @@ html body .codeContainer pre.shiki * {
 @media only screen and (max-width: 950px) and (max-height: 500px) {
   /* Landscape phones: let about section expand vertically */
   .aboutWrapper {
-    overflow-y: auto;
+    overflow: hidden;
+    padding-top: 80px;
+    align-content: center;
+    min-height: calc(100dvh - 80px - 40px); /* Fill space with buffer for footer */
+    grid-template-rows: auto auto;
+  }
+  .about {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(15px, 4vw, 40px);
+    max-height: 60vh;
+    padding: clamp(10px, 3vh, 25px);
+  }
+  .bioContent {
+    display: block;
+    flex: 1.3;
+    text-align: center;
+    order: 1;
+  }
+  .clients {
+    flex: 0.7;
+    order: 2;
+  }
+  .aboutBox {
+    padding-block: 5px;
+  }
+  .pageTitle {
+    padding-bottom: 2vh;
   }
   .footer {
     font-size: 1.4vw;
@@ -873,9 +961,6 @@ html body .codeContainer pre.shiki * {
   }
   .gallery-grid {
     --rows: 18;
-  }
-  .aboutWrapper {
-    max-height: 350px;
   }
   .aboutBox p {
     /* Use width-based units in landscape phones so text remains readable */

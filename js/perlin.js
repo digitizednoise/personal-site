@@ -6,7 +6,7 @@ let dn_flowField = [];
 let dn_cols, dn_rows;
 let dn_scl = 15;
 let dn_zoff = 0;
-let dn_numParticles = 300;
+let dn_numParticles = 350;
 let dn_canvas;
 
 function setup() {

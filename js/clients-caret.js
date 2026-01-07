@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const caretFontSize = parseFloat(getComputedStyle(caret).fontSize);
             
             const y = (linkRect.top - containerRect.top) + (linkRect.height - caret.offsetHeight) / 2;
-            const x = linkRect.left - containerRect.left + (linkFontSize * 0.15);
+            const x = linkRect.left - containerRect.left - (linkFontSize * 0.85);
 
             caret.style.transform = `translate(${x}px, ${y}px)`;
             caret.classList.add('visible');
