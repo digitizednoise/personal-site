@@ -701,11 +701,41 @@ br {
 
   .lightbox-content {
     max-width: 90%;
-    max-height: 80vh;
+    max-height: 90vh;
     margin: auto;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    .lightbox-media-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 100%;
+    }
+
+    .lightbox-info {
+      margin-top: 15px;
+      color: #fff;
+      text-align: left;
+      font-family: $code-font;
+      line-height: 1.2;
+      padding-left: 0.2vh;
+    }
+
+    .lightbox-software {
+      font-size: clamp(14px, 2vh, 24px);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: $darkLight;
+    }
+
+    .lightbox-year {
+      font-size: clamp(11px, 1.4vh, 18px);
+      opacity: 0.7;
+      color: $darkLight;
+    }
 
     img {
       max-width: 100%;

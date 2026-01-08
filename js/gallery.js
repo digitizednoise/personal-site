@@ -52,6 +52,10 @@
     const isPortrait = element.classList?.contains('portrait');
     const youtubeUrl = element.getAttribute?.('data-youtube');
     const vimeoId = element.getAttribute?.('data-vimeo');
+    const itemType = element.querySelector?.('.item-type')?.textContent || '';
+    const itemYear = element.getAttribute?.('data-year') || '';
+
+    let mediaElement = null;
 
     if (youtubeUrl) {
       const newIframe = document.createElement('iframe');
@@ -66,7 +70,7 @@
       newIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share';
       newIframe.referrerPolicy = 'strict-origin-when-cross-origin';
       if (isPortrait) newIframe.classList.add('portrait-video');
-      content.appendChild(newIframe);
+      mediaElement = newIframe;
     } else if (vimeoId) {
       // Allow opening a Vimeo lightbox from ANY element that has data-vimeo (not just gallery items)
       const newIframe = document.createElement('iframe');
@@ -76,7 +80,7 @@
       newIframe.frameBorder = '0';
       newIframe.allow = 'autoplay; fullscreen; picture-in-picture';
       if (isPortrait) newIframe.classList.add('portrait-video');
-      content.appendChild(newIframe);
+      mediaElement = newIframe;
     } else if (iframe) {
       // Handle YouTube video
       if (iframe.src.includes('youtube.com') || iframe.src.includes('youtu.be')) {
@@ -94,7 +98,7 @@
         newIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share';
         newIframe.referrerPolicy = 'strict-origin-when-cross-origin';
         if (isPortrait) newIframe.classList.add('portrait-video');
-        content.appendChild(newIframe);
+        mediaElement = newIframe;
       }
       // Handle Vimeo video without data-vimeo attribute
       else if (iframe.src.includes('vimeo.com')) {
@@ -109,7 +113,7 @@
           newIframe.frameBorder = '0';
           newIframe.allow = 'autoplay; fullscreen; picture-in-picture';
           if (isPortrait) newIframe.classList.add('portrait-video');
-          content.appendChild(newIframe);
+          mediaElement = newIframe;
         }
       }
     } else if (img) {
@@ -117,7 +121,32 @@
       const newImg = document.createElement('img');
       newImg.src = img.src;
       newImg.alt = img.alt || '';
-      content.appendChild(newImg);
+      mediaElement = newImg;
+    }
+
+    if (mediaElement) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'lightbox-media-wrapper';
+      wrapper.appendChild(mediaElement);
+
+      if (itemType) {
+        const info = document.createElement('div');
+        info.className = 'lightbox-info';
+
+        const software = document.createElement('div');
+        software.className = 'lightbox-software';
+        software.textContent = itemType;
+
+        const year = document.createElement('div');
+        year.className = 'lightbox-year';
+        year.textContent = itemYear || '2024'; // Individual year from data-year attribute
+
+        info.appendChild(software);
+        info.appendChild(year);
+        wrapper.appendChild(info);
+      }
+
+      content.appendChild(wrapper);
     }
 
     // Force a browser reflow so the transition animation plays nicely
@@ -195,11 +224,12 @@
     setTimeout(setupVimeoPlaceholders, 100);
   }
 
-  window.addGalleryItem = function(type, src, title, itemType, vimeoId = null, youtubeId = null, placeholderSrc = null) {
+  window.addGalleryItem = function(type, src, title, itemType, vimeoId = null, youtubeId = null, placeholderSrc = null, year = null) {
     const gallery = document.getElementById('gallery');
     if (!gallery) return;
     const item = document.createElement('div');
     item.className = `gallery-item ${type}`;
+    if (year) item.setAttribute('data-year', year);
     item.onclick = () => openLightbox(item);
 
     if (vimeoId) {
