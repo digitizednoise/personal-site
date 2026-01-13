@@ -12,12 +12,12 @@ $darkLight: light-dark(black,white);
 // LOAD FONTS
 @font-face {
   font-family: "V323";
-  src: url("/1_portfolioWebsite/fonts/VT323-Regular.ttf") format("truetype");
+  src: url("../fonts/VT323-Regular.ttf") format("truetype");
 }
 
 @font-face {
   font-family: "JetBrains Mono";
-  src: url("/1_portfolioWebsite/fonts/JetBrainsMono-Thin.ttf") format("truetype");
+  src: url("../fonts/JetBrainsMono-Thin.ttf") format("truetype");
 }
 
 @keyframes TransitioningBackground {
@@ -33,9 +33,9 @@ $darkLight: light-dark(black,white);
 }
 
 // FONTS
-$main-font: "Microsoft Yi Baiti";
-$code-font: JetBrains Mono;
-$bit-font: V323;
+$main-font: Microsoft Yi Baiti, sans-serif;
+$code-font: JetBrains Mono, sans-serif;
+$bit-font: V323, sans-serif;
 $console-font: "Cascadia Code", sans-serif;
 
 // FONT SIZES
@@ -395,7 +395,6 @@ br {
   left: -10px;
   font-family: $bit-font;
   font-size: calc(#{$clientsSize} * 1.7);
-  color: white; // Fallback
   color: $darkLight; // Ensure it's visible (white in dark mode)
   pointer-events: none;
   z-index: 20; // High enough to be on top of everything in the section
@@ -870,7 +869,7 @@ a:hover .downloadLink {
   height: 75px;
   top: 0; /* Make it stick/fixed */
   width: 100%; /* Full width */
-  z-index: 20;
+  z-index: 20000;
 }
 
 a:hover #navbar {
@@ -885,7 +884,7 @@ a:hover #navbar {
 
 .navModal {
   position: fixed;
-  z-index: 19;
+  z-index: 19000;
   align-items: center;
   justify-content: center;
   width: 100%;
@@ -903,7 +902,7 @@ a:hover #navbar {
     clip-path 0s linear 0.3s;
 
   &.active {
-    clip-path: circle(5000px);
+    clip-path: circle(50000px);
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -1026,19 +1025,6 @@ a:hover #navbar {
   font-size: $pageTitleSize;
   color: $darkLight;
 }
-
-.systemTitle {
-  display: grid;
-  position: relative;
-  justify-content: center;
-  margin: auto;
-  padding-bottom: 3vh;
-  width: 100%;
-  text-align: center;
-  font-size: $systemTitleSize;
-  color: $darkLight;
-}
-
 
 .iframe-container {
   position: relative;
@@ -1163,7 +1149,7 @@ html body .codeContainer pre.shiki * {
   justify-content: center;
   bottom: 0;
   margin: auto;
-  z-index: 2000;
+  z-index: 20001;
   width: 100%;
   text-align: center;
   background-color: #000;
