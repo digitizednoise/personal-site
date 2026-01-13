@@ -116,6 +116,13 @@ br {
   height: auto;
 }
 
+.homeWrapper {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
 .frontPageWrapper {
   margin-bottom: 0;
 }
@@ -395,7 +402,6 @@ br {
 .gallery-container {
   height: 100%;
   width: 100%;
-  padding: 0px;
 }
 
 .gallery-grid {
@@ -422,11 +428,21 @@ br {
   border: 1px solid #2a2a2a;
   cursor: pointer;
   transition: transform 0.18s ease;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
 }
 .gallery-item:hover {
-  transform: scale(1);
-  opacity: 75%;
+  transform: scale(1.02);
+  opacity: 0.85;
   z-index: 5;
+}
+.gallery-item:focus {
+  outline: 2px solid white;
+  outline-offset: 4px;
+  z-index: 10;
+  opacity: 1;
 }
 .gallery-item img, .gallery-item video {
   width: 100%;
@@ -486,7 +502,7 @@ br {
   align-items: flex-end;
   padding: 14px;
 }
-.gallery-item:hover .item-overlay {
+.gallery-item:hover .item-overlay, .gallery-item:focus .item-overlay {
   opacity: 1;
 }
 .item-overlay .item-info {
@@ -754,6 +770,12 @@ a:hover #navbar {
   transform: translate(-5%, -50%);
   cursor: pointer;
   background-color: black;
+  border: none;
+  padding: 0;
+}
+.menubar:focus {
+  outline: 2px solid white;
+  outline-offset: 4px;
 }
 
 .bar1,

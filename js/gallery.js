@@ -32,10 +32,15 @@
     });
   }
 
+  let lastFocusedElement = null;
+
   function openLightbox(element) {
     const lightbox = document.getElementById('lightbox');
     const content = document.getElementById('lightboxContent');
     if (!lightbox || !content) return;
+
+    // Save the element that triggered the lightbox to return focus later
+    lastFocusedElement = element;
 
     // Pause background Vimeo thumbs so nothing plays behind the modal
     pauseBackgroundVimeos();
@@ -87,9 +92,6 @@
         const newIframe = document.createElement('iframe');
         // Extract YouTube video ID and create autoplay URL
         const youtubeUrl = iframe.src;
-        const autoplayUrl = youtubeUrl.includes('?')
-          ? `${youtubeUrl}&autoplay=1`
-          : `${youtubeUrl}?autoplay=1`;
 
         newIframe.src = autoplayUrl;
         newIframe.width = '800';
@@ -153,7 +155,15 @@
     void lightbox.offsetWidth;
 
     lightbox.classList.add('active');
+    lightbox.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+
+    // Focus the close button for accessibility
+    const closeBtn = lightbox.querySelector('.lightbox-close');
+    if (closeBtn) {
+      // Small timeout to ensure the element is visible before focusing
+      setTimeout(() => closeBtn.focus(), 50);
+    }
 
     // Close when clicking outside the content (backdrop click)
     lightbox.onclick = function(e) {
@@ -168,6 +178,7 @@
     if (!lightbox) return;
 
     lightbox.classList.remove('active');
+    lightbox.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = 'auto';
 
     // Stop any playing videos (iframe/audio) immediately
@@ -179,11 +190,41 @@
 
     // Clear inline style so CSS can handle visibility
     lightbox.style.display = '';
+
+    // Return focus to the element that opened the lightbox
+    if (lastFocusedElement) {
+      lastFocusedElement.focus();
+    }
   }
 
-  // Close with Escape
+  // Close with Escape and handle Tab trapping
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLightbox();
+    const lightbox = document.getElementById('lightbox');
+    if (!lightbox || !lightbox.classList.contains('active')) return;
+
+    if (e.key === 'Escape') {
+      closeLightbox();
+    }
+
+    if (e.key === 'Tab') {
+      const focusableElements = lightbox.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), iframe');
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) { // Shift + Tab
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else { // Tab
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    }
   });
 
   // Expose helpers globally
@@ -227,15 +268,17 @@
   window.addGalleryItem = function(type, src, title, itemType, vimeoId = null, youtubeId = null, placeholderSrc = null, year = null) {
     const gallery = document.getElementById('gallery');
     if (!gallery) return;
-    const item = document.createElement('div');
+    const item = document.createElement('button');
+    item.type = 'button';
     item.className = `gallery-item ${type}`;
     if (year) item.setAttribute('data-year', year);
+    if (title) item.setAttribute('aria-label', `View ${title}`);
     item.onclick = () => openLightbox(item);
 
     if (vimeoId) {
       item.setAttribute('data-vimeo', vimeoId);
       item.innerHTML = `
-        <iframe src="https://player.vimeo.com/video/${vimeoId}?background=1&muted=1" frameborder="0"></iframe>
+        <iframe src="https://player.vimeo.com/video/${vimeoId}?background=1&muted=1"></iframe>
         ${placeholderSrc ? `<img src="${placeholderSrc}" class="vimeo-placeholder" alt="">` : ''}
         <div class="item-overlay">
             <div class="item-info">

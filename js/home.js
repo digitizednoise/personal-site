@@ -1,9 +1,9 @@
 // VoxelOcean - Vanilla JS implementation based on provided React + Three.js component
 // This script mounts a Three.js animation inside the #voxel-ocean-container div.
 
-import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+import * as THREE from 'three/webgpu';
 
-(function initVoxelOcean() {
+(async function initVoxelOcean() {
   const container = document.getElementById('voxel-ocean-container');
   if (!container) return;
 
@@ -23,7 +23,8 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
   camera.lookAt(0, 0, 0);
 
   // Renderer
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGPURenderer({ antialias: true });
+  await renderer.init();
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setPixelRatio(window.devicePixelRatio || 1);
   container.appendChild(renderer.domElement);
@@ -88,12 +89,8 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
   let angle = 0;
   const radius = 40;
 
-  let animationFrameId = null;
-
   // Animation
   const animate = () => {
-    animationFrameId = requestAnimationFrame(animate);
-
     const time = Date.now() * 0.0008;
 
     // Update voxel positions with wave motion
@@ -129,7 +126,7 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
     renderer.render(scene, camera);
   };
 
-  animate();
+  renderer.setAnimationLoop(animate);
 
   // Handle window resize
   const handleResize = () => {
@@ -145,7 +142,7 @@ import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
   // Optional cleanup on page unload/navigation
   const cleanup = () => {
     window.removeEventListener('resize', handleResize);
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    renderer.setAnimationLoop(null);
     if (renderer && renderer.domElement && renderer.domElement.parentNode === container) {
       container.removeChild(renderer.domElement);
     }

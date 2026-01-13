@@ -388,6 +388,9 @@ onResize();
 (function initInfographicOverlay() {
     const overlay = document.createElement('div');
     overlay.id = 'systems-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-hidden', 'true');
     Object.assign(overlay.style, {
         position: 'absolute',
         inset: '0',
@@ -400,6 +403,7 @@ onResize();
     });
 
     const panel = document.createElement('div');
+    // ... panel styling ...
     Object.assign(panel.style, {
         width: '85%',
         maxHeight: '600px',
@@ -460,6 +464,7 @@ onResize();
     container.appendChild(overlay);
 
     let previousBodyOverflow = '';
+    let lastFocusedElement = null;
 
     // Ensure a compatible import map exists so module scripts like /coin.js can resolve 'three' and example modules
     function ensureImportMap() {
@@ -523,6 +528,9 @@ onResize();
     }
 
     window.openOverlay = function openOverlay(i) {
+        // Save focus
+        lastFocusedElement = document.activeElement;
+
         // Clear old content
         mediaEl.innerHTML = '';
         contentEl.innerHTML = '';
@@ -567,21 +575,52 @@ onResize();
         executeScripts(panel);
 
         overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden', 'false');
         previousBodyOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
+
+        // Focus close button
+        setTimeout(() => closeBtn.focus(), 50);
     };
 
     function closeOverlay() {
         overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = previousBodyOverflow || '';
+        if (lastFocusedElement) lastFocusedElement.focus();
     }
 
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeOverlay();
     });
     closeBtn.addEventListener('click', closeOverlay);
+
     window.addEventListener('keydown', (e) => {
-        if (overlay.style.display !== 'none' && e.key === 'Escape') closeOverlay();
+        if (overlay.style.display === 'none') return;
+
+        if (e.key === 'Escape') {
+            closeOverlay();
+        }
+
+        if (e.key === 'Tab') {
+            const focusableElements = panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), iframe');
+            if (focusableElements.length === 0) return;
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey) { // Shift + Tab
+                if (document.activeElement === firstElement) {
+                    lastElement.focus();
+                    e.preventDefault();
+                }
+            } else { // Tab
+                if (document.activeElement === lastElement) {
+                    firstElement.focus();
+                    e.preventDefault();
+                }
+            }
+        }
     });
 })();
 

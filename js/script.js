@@ -86,12 +86,54 @@ item.forEach((img) => {
 //NAV_MODAL
 let navMenu = document.querySelector(".menubar");
 let Nmodal = document.querySelector(".navModal");
-let indexNavMenu = document.querySelector(".indexMenuBar");
+let lastFocusedNavElement = null;
 
-navMenu.onclick = () => {
-    navMenu.classList.toggle("change")
-    Nmodal.classList.toggle("active")
+if (navMenu && Nmodal) {
+    navMenu.onclick = () => {
+        const isActive = Nmodal.classList.toggle("active");
+        navMenu.classList.toggle("change");
+        navMenu.setAttribute('aria-expanded', isActive);
+        
+        if (isActive) {
+            lastFocusedNavElement = document.activeElement;
+            Nmodal.setAttribute('aria-hidden', 'false');
+            // Focus first link in nav
+            const firstLink = Nmodal.querySelector('a');
+            if (firstLink) setTimeout(() => firstLink.focus(), 100);
+        } else {
+            Nmodal.setAttribute('aria-hidden', 'true');
+            if (lastFocusedNavElement) lastFocusedNavElement.focus();
+        }
+    };
 
+    // Global listeners for Nav Modal (ESC and Tab Trap)
+    document.addEventListener('keydown', (e) => {
+        if (!Nmodal.classList.contains('active')) return;
+
+        if (e.key === 'Escape') {
+            navMenu.click();
+        }
+
+        if (e.key === 'Tab') {
+            const focusableElements = Nmodal.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])');
+            if (focusableElements.length > 0) {
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+
+                if (e.shiftKey) { // Shift + Tab
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        e.preventDefault();
+                    }
+                } else { // Tab
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        }
+    });
 }
 
 //
