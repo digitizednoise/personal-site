@@ -1,6 +1,19 @@
 // gallery.js - Lightbox and dynamic item utilities for Visual Gallery
 
 (function(){
+  // Cache Vimeo players per iframe to avoid recreating them on every pause/resume
+  const dnVimeoPlayerCache = new WeakMap();
+  function getVimeoPlayerForIframe(iframe) {
+    if (!window.Vimeo?.Player) return null;
+
+    let player = dnVimeoPlayerCache.get(iframe);
+    if (!player) {
+      player = new Vimeo.Player(iframe);
+      dnVimeoPlayerCache.set(iframe, player);
+    }
+    return player;
+  }
+
   function getBackgroundVimeoIframes() {
     const gallery = document.getElementById('gallery');
     if (!gallery) return [];
@@ -13,7 +26,9 @@
     if (!window.Vimeo?.Player) return;
 
     getBackgroundVimeoIframes().forEach((iframe) => {
-      const player = new Vimeo.Player(iframe);
+      const player = getVimeoPlayerForIframe(iframe);
+      if (!player) return;
+
       player.pause().catch(() => {
         // Some browsers/edge cases can reject; safe to ignore.
       });
@@ -24,7 +39,9 @@
     if (!window.Vimeo?.Player) return;
 
     getBackgroundVimeoIframes().forEach((iframe) => {
-      const player = new Vimeo.Player(iframe);
+      const player = getVimeoPlayerForIframe(iframe);
+      if (!player) return;
+
       player.play().catch(() => {
         // Autoplay can still be blocked in some situations.
         // Usually OK here because closing the modal is a user gesture.
@@ -33,11 +50,20 @@
   }
 
   let lastFocusedElement = null;
+  let dnLightboxBackdropHandlerBound = false;
 
   function openLightbox(element) {
     const lightbox = document.getElementById('lightbox');
     const content = document.getElementById('lightboxContent');
     if (!lightbox || !content) return;
+
+    // Bind once: close on backdrop click (don’t reassign lightbox.onclick every open)
+    if (!dnLightboxBackdropHandlerBound) {
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+      dnLightboxBackdropHandlerBound = true;
+    }
 
     // Save the element that triggered the lightbox to return focus later
     lastFocusedElement = element;
@@ -92,6 +118,9 @@
         const newIframe = document.createElement('iframe');
         // Extract YouTube video ID and create autoplay URL
         const youtubeUrl = iframe.src;
+        const autoplayUrl = youtubeUrl.includes('?')
+          ? `${youtubeUrl}&autoplay=1`
+          : `${youtubeUrl}?autoplay=1`;
 
         newIframe.src = autoplayUrl;
         newIframe.width = '800';
@@ -165,12 +194,6 @@
       setTimeout(() => closeBtn.focus(), 50);
     }
 
-    // Close when clicking outside the content (backdrop click)
-    lightbox.onclick = function(e) {
-      if (e.target === lightbox) {
-        closeLightbox();
-      }
-    };
   }
 
   function closeLightbox() {
@@ -194,6 +217,7 @@
     // Return focus to the element that opened the lightbox
     if (lastFocusedElement) {
       lastFocusedElement.focus();
+      lastFocusedElement = null; // avoid stale references
     }
   }
 
@@ -212,6 +236,13 @@
 
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
+
+      // Guardrail: if focus somehow escapes the modal, bring it back in.
+      if (!lightbox.contains(document.activeElement)) {
+        firstElement.focus();
+        e.preventDefault();
+        return;
+      }
 
       if (e.shiftKey) { // Shift + Tab
         if (document.activeElement === firstElement) {
@@ -241,14 +272,15 @@
       const placeholder = item.querySelector('.vimeo-placeholder');
       if (!placeholder) return;
 
-      const player = new Vimeo.Player(iframe);
-      
+      const player = getVimeoPlayerForIframe(iframe);
+      if (!player) return;
+
       // When the video starts playing, fade out the placeholder
       player.on('play', function() {
         placeholder.style.opacity = '0';
       });
 
-      // Also check if it's already playing (e.g. if it loaded before JS)
+      // Also check if it's already playing (*e.g. if it loaded before JS)
       player.getPaused().then(paused => {
         if (!paused) {
           placeholder.style.opacity = '0';
@@ -290,11 +322,13 @@
 
       if (placeholderSrc && window.Vimeo?.Player) {
         const iframe = item.querySelector('iframe');
-        const player = new Vimeo.Player(iframe);
-        player.on('play', () => {
-          const p = item.querySelector('.vimeo-placeholder');
-          if (p) p.style.opacity = '0';
-        });
+        const player = getVimeoPlayerForIframe(iframe);
+        if (player) {
+          player.on('play', () => {
+            const p = item.querySelector('.vimeo-placeholder');
+            if (p) p.style.opacity = '0';
+          });
+        }
       }
     } else if (youtubeId) {
       item.setAttribute('data-youtube', `https://www.youtube.com/embed/${youtubeId}`);

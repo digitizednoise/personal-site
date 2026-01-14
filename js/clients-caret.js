@@ -1,24 +1,26 @@
+
+// CLIENTS CARET (TERMINAL-CURSOR)
+
 document.addEventListener('DOMContentLoaded', () => {
     const caret = document.querySelector('.clients-caret');
     const links = document.querySelectorAll('.clients p a');
     const container = document.querySelector('.clients');
 
-    if (!caret || links.length === 0 || !container) return;
+    // Checking our current selected link.
 
+    if (!caret || links.length === 0 || !container) return;
     let currentLink = links[0];
 
     const updateCaret = (link) => {
         if (!link || !caret || !container) return;
         
-        // Use requestAnimationFrame to ensure layout is ready
+        // Is layout ready?
         requestAnimationFrame(() => {
             const linkRect = link.getBoundingClientRect();
             const containerRect = container.getBoundingClientRect();
 
-            // Calculate position relative to container
-            // We center the caret vertically relative to the link
+            // Calculate position relative to clients container
             const linkFontSize = parseFloat(getComputedStyle(link).fontSize);
-            const caretFontSize = parseFloat(getComputedStyle(caret).fontSize);
             
             const y = (linkRect.top - containerRect.top) + (linkRect.height - caret.offsetHeight) / 2;
             const x = linkRect.left - containerRect.left - (linkFontSize * 0.85);
@@ -34,18 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCaret(link);
         };
 
-        // Desktop hover
+        // Desktop Hover
         link.addEventListener('mouseenter', handleInteraction);
 
-        // Mobile tap / Keyboard focus
+        // Mobile Tap / Keyboard
         link.addEventListener('focus', handleInteraction);
 
-        // Mobile touch for immediate feedback
+        // Mobile Immediate
         link.addEventListener('touchstart', handleInteraction, {passive: true});
     });
 
     // Initialize position
-    // We use multiple checks to handle font loading and layout shifts
     const init = () => {
         updateCaret(currentLink);
     };
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCaret(currentLink);
     });
 
-    // Re-align on load (for fonts/images)
+    // Re-align on load
     window.addEventListener('load', () => {
         updateCaret(currentLink);
     });

@@ -34,14 +34,20 @@ class HorizontalScrollGallery {
     }
 
     handleScroll(e) {
+        // Only hijack scrolling if there's actually horizontal overflow
+        const containerWidth = this.container.offsetWidth;
+        const galleryWidth = this.gallery.scrollWidth;
+        if (galleryWidth <= containerWidth) return;
+
         e.preventDefault();
 
-        const scrollAmount = e.deltaY * this.scrollSpeed;
+        // Prefer the user's dominant scroll axis (trackpads often use deltaX)
+        const dominantDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+
+        const scrollAmount = dominantDelta * this.scrollSpeed;
         this.targetX = this.targetX - scrollAmount;
 
         // Clamp target to bounds
-        const containerWidth = this.container.offsetWidth;
-        const galleryWidth = this.gallery.scrollWidth;
         const maxScroll = -(galleryWidth - containerWidth);
         this.targetX = Math.min(0, Math.max(maxScroll, this.targetX));
 
