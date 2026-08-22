@@ -1,0 +1,80 @@
+/* The image lightbox owns its close control, so lower the page chrome while it
+   is active. The Systems info panel stays below the navbar and footer. */
+body:not([data-nav-open="true"]):has(#lightbox.active) #navbar,
+body:has(#lightbox.active) .footerWrapper {
+  z-index: 100 !important;
+}
+
+/* Mobile Landscape Lightbox Sizing Fix */
+@media only screen and (max-height: 500px) and (orientation: landscape) {
+  .lightbox {
+    z-index: 200000 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100dvh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+
+    .lightbox-content {
+      max-height: 100% !important;
+      max-width: 100% !important;
+      width: auto !important;
+      height: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+
+      .lightbox-media-wrapper {
+        max-height: 98dvh !important;
+        max-width: 80vw !important; // Clear the close button on the right more safely
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+
+        img,
+        video,
+        .lightbox-vimeo-container,
+        iframe {
+          max-height: 79dvh !important; // Increased to use more space
+          width: auto !important;
+          max-width: 100% !important;
+          object-fit: contain !important;
+          border: 1px solid rgba(255, 255, 255, 1.0) !important;
+        }
+
+        // Specific handling for iframes/vimeo to maintain aspect ratio
+        .lightbox-vimeo-container,
+        iframe {
+          aspect-ratio: 16/9;
+          width: auto !important;
+          height: 79dvh !important; // Fill vertical space
+          max-width: 100% !important;
+
+          &.portrait-video, &.portrait-container {
+            aspect-ratio: 9/16;
+            height: 70dvh !important;
+            width: auto !important;
+          }
+        }
+
+        .lightbox-info {
+          margin-top: 10px !important;
+          text-align: left !important;
+          width: 100%;
+          padding-left: 2px !important;
+
+          .lightbox-software {
+            font-size: 0.8em !important;
+          }
+          .lightbox-year {
+            font-size: 0.7em !important;
+          }
+        }
+      }
+    }
+  }
+}
+

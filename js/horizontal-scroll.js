@@ -1,158 +1,291 @@
-// horizontal-scroll.js - Convert vertical scroll to horizontal scroll
+class HorizontalScrollRow {
+  constructor(container, row) {
+    this.container = container;
+    this.row = row;
+    this.targetX = 0;
+    this.currentX = 0;
+    this.smoothingTime = 155;
+    this.speed = 1.3;
+    this._dragThreshold = 8;
+    this._pointerId = null;
+    this._pointerStartX = 0;
+    this._pointerStartY = 0;
+    this._pointerLastX = 0;
+    this._gestureAxis = null;
+    this._isDragging = false;
+    this.animationFrameId = null;
+    this._lastFrameTime = 0;
+    this._motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    this._reducedMotion = this._motionQuery.matches;
 
-class HorizontalScrollGallery {
-    constructor() {
-        this.gallery = document.querySelector('.gallery');
-        this.container = document.querySelector('.visualWrapper');
-        this.scrollSpeed = 1.5;
-        this.targetX = 0;
-        this.currentX = 0;
-        this.animationFrameId = null;
+    this._originalRowStyles = {
+      transform: this.row.style.transform,
+      transition: this.row.style.transition,
+      willChange: this.row.style.willChange,
+    };
+    this._originalTouchAction = this.container.style.touchAction;
+    this._addedTabIndex = !this.container.hasAttribute('tabindex');
 
-        if (this.gallery && this.container) {
-            this.init();
-        }
+    this._onWheel = this._onWheel.bind(this);
+    this._onPointerDown = this._onPointerDown.bind(this);
+    this._onPointerMove = this._onPointerMove.bind(this);
+    this._onPointerEnd = this._onPointerEnd.bind(this);
+    this._onResize = this._onResize.bind(this);
+    this._onKey = this._onKey.bind(this);
+    this._onFocusIn = this._onFocusIn.bind(this);
+    this._onMotionChange = this._onMotionChange.bind(this);
+    this.update = this.update.bind(this);
+
+    this.row.style.transition = 'none';
+    this.row.style.willChange = 'transform';
+    this.container.style.touchAction = 'pan-y';
+    if (this._addedTabIndex) this.container.tabIndex = 0;
+
+    this.container.addEventListener('wheel', this._onWheel, { passive: false });
+    this.container.addEventListener('pointerdown', this._onPointerDown);
+    this.container.addEventListener('pointermove', this._onPointerMove, { passive: false });
+    this.container.addEventListener('pointerup', this._onPointerEnd);
+    this.container.addEventListener('pointercancel', this._onPointerEnd);
+    window.addEventListener('resize', this._onResize);
+    this.container.addEventListener('keydown', this._onKey);
+    this.container.addEventListener('focusin', this._onFocusIn);
+    this._motionQuery.addEventListener?.('change', this._onMotionChange);
+
+    if (window.ResizeObserver) {
+      this._ro = new ResizeObserver(() => this._clamp());
+      this._ro.observe(this.row);
+      this._ro.observe(this.container);
     }
 
-    init() {
-        // Add smooth transition to gallery
-        this.gallery.style.transition = 'transform 0.2s ease-out';
+    this._render();
+  }
 
-        // Add wheel event listener for horizontal scrolling
-        this.container.addEventListener('wheel', (e) => this.handleScroll(e), { passive: false });
+  destroy() {
+    if (this._pointerId !== null) this._releasePointer(this._pointerId);
+    this.container.removeEventListener('wheel', this._onWheel);
+    this.container.removeEventListener('pointerdown', this._onPointerDown);
+    this.container.removeEventListener('pointermove', this._onPointerMove);
+    this.container.removeEventListener('pointerup', this._onPointerEnd);
+    this.container.removeEventListener('pointercancel', this._onPointerEnd);
+    window.removeEventListener('resize', this._onResize);
+    this.container.removeEventListener('keydown', this._onKey);
+    this.container.removeEventListener('focusin', this._onFocusIn);
+    this._motionQuery.removeEventListener?.('change', this._onMotionChange);
+    this._ro?.disconnect();
+    this.row.style.transform = this._originalRowStyles.transform;
+    this.row.style.transition = this._originalRowStyles.transition;
+    this.row.style.willChange = this._originalRowStyles.willChange;
+    this.container.style.touchAction = this._originalTouchAction;
+    if (this._addedTabIndex) this.container.removeAttribute('tabindex');
+    cancelAnimationFrame(this.animationFrameId);
+    this.animationFrameId = null;
+  }
 
-        // Add touch support for mobile
-        this.addTouchSupport();
+  _render() {
+    this.row.style.transform = `translate3d(${this.currentX}px, 0, 0)`;
+  }
 
-        // Add keyboard support
-        this.addKeyboardSupport();
+  _requestUpdate() {
+    if (this.animationFrameId !== null) return;
+    if (!this._lastFrameTime) this._lastFrameTime = performance.now();
+    this.animationFrameId = requestAnimationFrame(this.update);
+  }
 
-        // Clamp position on load and when layout changes
-        this.addResizeHandling();
-        this.targetX = this.getCurrentX();
-        this.currentX = this.targetX;
+  update(timestamp) {
+    this.animationFrameId = null;
+
+    const elapsed = this._lastFrameTime ? Math.max(0, timestamp - this._lastFrameTime) : 0;
+    this._lastFrameTime = timestamp;
+    const difference = this.targetX - this.currentX;
+
+    if (this._reducedMotion || Math.abs(difference) < 0.1) {
+      this.currentX = this.targetX;
+      this._lastFrameTime = 0;
+      this._render();
+      return;
     }
 
-    handleScroll(e) {
-        // Only hijack scrolling if there's actually horizontal overflow
-        const containerWidth = this.container.offsetWidth;
-        const galleryWidth = this.gallery.scrollWidth;
-        if (galleryWidth <= containerWidth) return;
+    const timeBasedEase = 1 - Math.exp(-elapsed / this.smoothingTime);
+    this.currentX += difference * timeBasedEase;
+    this._render();
+    this._requestUpdate();
+  }
 
-        e.preventDefault();
+  _maxScroll() {
+    return -(this.row.scrollWidth - this.container.clientWidth);
+  }
 
-        // Prefer the user's dominant scroll axis (trackpads often use deltaX)
-        const dominantDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  _clampedPosition(x) {
+    const min = Math.min(0, this._maxScroll());
+    return Math.min(0, Math.max(min, x));
+  }
 
-        const scrollAmount = dominantDelta * this.scrollSpeed;
-        this.targetX = this.targetX - scrollAmount;
+  _apply(x, immediate = false) {
+    this.targetX = this._clampedPosition(x);
+    if (immediate || this._reducedMotion) {
+      this.currentX = this.targetX;
+      this._lastFrameTime = 0;
+      this._render();
+      return;
+    }
+    this._requestUpdate();
+  }
 
-        // Clamp target to bounds
-        const maxScroll = -(galleryWidth - containerWidth);
-        this.targetX = Math.min(0, Math.max(maxScroll, this.targetX));
+  _clamp() {
+    this.targetX = this._clampedPosition(this.targetX);
+    this.currentX = this._clampedPosition(this.currentX);
+    this._render();
+    if (Math.abs(this.targetX - this.currentX) >= 0.1) this._requestUpdate();
+  }
 
-        // Apply immediately (CSS transition handles smoothing)
-        this.gallery.style.transform = `translateX(${this.targetX}px)`;
-        this.currentX = this.targetX;
+  _normalizedWheelDelta(e) {
+    let multiplier = 1;
+
+    if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+      const styles = getComputedStyle(this.container);
+      const lineHeight = Number.parseFloat(styles.lineHeight);
+      const fontSize = Number.parseFloat(styles.fontSize) || 16;
+      multiplier = Number.isFinite(lineHeight) ? lineHeight : fontSize * 1.2;
+    } else if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+      multiplier = this.container.clientWidth;
     }
 
-    addTouchSupport() {
-        let startX = 0;
-        let isDragging = false;
+    const deltaX = e.deltaX * multiplier;
+    const deltaY = e.deltaY * multiplier;
+    return Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
+  }
 
-        // Disable transition during touch for immediate feedback
-        this.container.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            isDragging = true;
-            this.gallery.style.transition = 'none';
-            this.targetX = this.getCurrentX();
-        });
+  _onWheel(e) {
+    if (this.row.scrollWidth <= this.container.clientWidth) return;
 
-        this.container.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
+    const delta = this._normalizedWheelDelta(e);
+    if (delta === 0) return;
 
-            const currentTouchX = e.touches[0].clientX;
-            const deltaX = currentTouchX - startX;
+    const nextX = this._clampedPosition(this.targetX - delta * this.speed);
+    if (nextX === this.targetX) return;
+    e.preventDefault();
+    this._apply(nextX);
+  }
 
-            this.targetX = this.targetX + deltaX;
-            this.clampToBounds(this.targetX);
+  _onPointerDown(e) {
+    if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (this._pointerId !== null || this.row.scrollWidth <= this.container.clientWidth) return;
 
-            startX = currentTouchX;
-        }, { passive: false });
+    this._pointerId = e.pointerId;
+    this._pointerStartX = e.clientX;
+    this._pointerStartY = e.clientY;
+    this._pointerLastX = e.clientX;
+    this._gestureAxis = null;
+    this._isDragging = true;
+  }
 
-        this.container.addEventListener('touchend', () => {
-            isDragging = false;
-            // Re-enable transition
-            this.gallery.style.transition = 'transform 0.1s ease-out';
-        });
+  _onPointerMove(e) {
+    if (!this._isDragging || e.pointerId !== this._pointerId) return;
+
+    if (this._gestureAxis === null) {
+      const totalX = e.clientX - this._pointerStartX;
+      const totalY = e.clientY - this._pointerStartY;
+      if (Math.hypot(totalX, totalY) < this._dragThreshold) return;
+
+      this._gestureAxis = Math.abs(totalX) > Math.abs(totalY) ? 'horizontal' : 'vertical';
+      if (this._gestureAxis === 'vertical') {
+        this._releasePointer(e.pointerId);
+        return;
+      }
+
+      e.preventDefault();
+      this.container.setPointerCapture?.(e.pointerId);
+      this.targetX = this.currentX;
+      this._apply(this.targetX + totalX, true);
+      this._pointerLastX = e.clientX;
+      return;
     }
 
-    addKeyboardSupport() {
-        document.addEventListener('keydown', (e) => {
-            if (!this.container.matches(':hover')) return;
+    if (this._gestureAxis !== 'horizontal') return;
 
-            let scrollAmount = 0;
+    e.preventDefault();
+    const deltaX = e.clientX - this._pointerLastX;
+    this._pointerLastX = e.clientX;
+    this._apply(this.targetX + deltaX, true);
+  }
 
-            switch(e.key) {
-                case 'ArrowRight':
-                    scrollAmount = 100;
-                    break;
-                case 'ArrowLeft':
-                    scrollAmount = -100;
-                    break;
-                default:
-                    return;
-            }
+  _onPointerEnd(e) {
+    if (e.pointerId !== this._pointerId) return;
+    this._releasePointer(e.pointerId);
+  }
 
-            e.preventDefault();
-
-            this.targetX = this.targetX - scrollAmount;
-            this.clampToBounds(this.targetX);
-        });
+  _releasePointer(pointerId) {
+    if (this.container.hasPointerCapture?.(pointerId)) {
+      this.container.releasePointerCapture(pointerId);
     }
+    this._pointerId = null;
+    this._gestureAxis = null;
+    this._isDragging = false;
+  }
 
-    addResizeHandling() {
-        const clamp = () => {
-            this.targetX = this.getCurrentX();
-            this.clampToBounds(this.targetX);
-        };
-        window.addEventListener('resize', clamp);
-        window.addEventListener('orientationchange', clamp);
+  _onResize() {
+    this._clamp();
+  }
 
-        if (window.ResizeObserver) {
-            const ro = new ResizeObserver(clamp);
-            ro.observe(this.gallery);
-            this._ro = ro;
-        }
+  _onKey(e) {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      this._apply(this.targetX - 140);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      this._apply(this.targetX + 140);
     }
+  }
 
-    getCurrentX() {
-        const currentTransform = getComputedStyle(this.gallery).transform;
-        if (currentTransform && currentTransform !== 'none') {
-            const match = currentTransform.match(/matrix\((.+)\)/);
-            if (match) {
-                const parts = match[1].split(', ');
-                const x = parseFloat(parts[4]);
-                return isNaN(x) ? 0 : x;
-            }
-        }
-        return 0;
-    }
+  _onMotionChange(e) {
+    this._reducedMotion = e.matches;
+    if (this._reducedMotion) this._apply(this.targetX, true);
+  }
 
-    clampToBounds(x) {
-        const containerWidth = this.container.offsetWidth;
-        const galleryWidth = this.gallery.scrollWidth;
-        const maxScroll = -(galleryWidth - containerWidth);
-        const constrainedX = Math.min(0, Math.max(maxScroll, x));
-        this.gallery.style.transform = `translateX(${constrainedX}px)`;
-        this.targetX = constrainedX;
-        this.currentX = constrainedX;
-        return constrainedX;
+  _onFocusIn(e) {
+    const target = e.target.closest?.('button, a[href], iframe, [tabindex]:not([tabindex="-1"])');
+    if (!target || !this.row.contains(target)) return;
+
+    const padding = 16;
+    const containerRect = this.container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    if (targetRect.left < containerRect.left + padding) {
+      this._apply(this.targetX + (containerRect.left + padding - targetRect.left));
+    } else if (targetRect.right > containerRect.right - padding) {
+      this._apply(this.targetX - (targetRect.right - containerRect.right + padding));
     }
+  }
 }
 
-// Initialize when page loads
-window.addEventListener('load', () => {
-    new HorizontalScrollGallery();
-});
+window.HorizontalScroll = {
+  _instances: new WeakMap(),
+  init(containerSelector, rowSelector) {
+    document.querySelectorAll(containerSelector).forEach((container) => {
+      const row = container.querySelector(rowSelector);
+      if (!row) return;
+      const previous = this._instances.get(container);
+      previous?.destroy();
+      this._instances.set(container, new HorizontalScrollRow(container, row));
+    });
+  },
+  destroy(containerSelector) {
+    document.querySelectorAll(containerSelector).forEach((container) => {
+      const previous = this._instances.get(container);
+      if (!previous) return;
+      previous.destroy();
+      this._instances.delete(container);
+    });
+  },
+  initDeclarative(root = document) {
+    root.querySelectorAll('[data-horizontal-scroll]').forEach((container) => {
+      const row = container.querySelector('[data-horizontal-scroll-row]');
+      if (!row) return;
+      const previous = this._instances.get(container);
+      previous?.destroy();
+      this._instances.set(container, new HorizontalScrollRow(container, row));
+    });
+  },
+};
+
+window.HorizontalScroll.initDeclarative();

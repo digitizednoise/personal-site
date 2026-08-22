@@ -1,0 +1,198 @@
+@use "../abstracts" as *;
+
+/* ******************* Downloads ******************* */
+
+.downloadsWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  position: relative;
+  text-align: center;
+  margin: auto;
+  animation: fadeIn 0.5s;
+  gap: 10vh;
+  box-sizing: border-box;
+  padding-top: var(--navbar-height);
+  padding-bottom: 50px;
+}
+
+
+
+.lastUpdated p {
+  padding-top: 0.5vh;
+  font-family: $main-font;
+  font-size: $lastUpdatedSize; // Changed from vh to vw for horizontal responsiveness
+  color: $darkLight;
+}
+
+.lastUpdated,
+.downloads {
+  margin: 0;
+}
+
+
+.downloads{
+  display: grid;
+  gap: 7vh;
+}
+
+
+@keyframes borderFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+  //100% { background-color: white; }
+}
+
+@keyframes bgBreathe {
+  0%, 100% { background-color: transparent; color: $darkLight; }
+  50% { background-color: white; color: black; }
+}
+
+// Four-beat loop: buttons 2, 3, and 1 flash individually, then all flash together.
+@keyframes downloadBorderBeatTwo {
+  0%, 19.81% { opacity: 1; }
+  36.79% { opacity: 0; }
+  56.60%, 68% { opacity: 1; }
+  79.58% { opacity: 0; }
+  91.67%, 100% { opacity: 1; }
+}
+
+@keyframes downloadBorderBeatThree {
+  0%, 39.62% { opacity: 1; }
+  56.60% { opacity: 0; }
+  68% { opacity: 1; }
+  84.11% { opacity: 0; }
+  91.67%, 100% { opacity: 1; }
+}
+
+@keyframes downloadBorderBeatOne {
+  0% { opacity: 1; }
+  16.98% { opacity: 0; }
+  36.79%, 68% { opacity: 1; }
+  81.84% { opacity: 0; }
+  91.67%, 100% { opacity: 1; }
+}
+
+.downloadLink {
+  color: $darkLight;
+  font-family: Microsoft Yi Baiti, sans-serif;
+  font-size: clamp(0.8rem, 0.9rem + 1.1vmin, 1.7rem);
+  padding: 12px;
+  text-align: center;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+
+  &:before, &:after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    transition: width 0.3s ease, height 0.3s ease;
+    animation: var(--download-border-sequence, downloadBorderBeatTwo) 8s ease-in-out infinite;
+  }
+
+  &:before {
+    top: 0;
+    left: 0;
+    border-top: 1px solid $darkLight;
+    border-left: 1px solid $darkLight;
+  }
+
+  &:after {
+    bottom: 0;
+    right: 0;
+    border-bottom: 1px solid $darkLight;
+    border-right: 1px solid $darkLight;
+  }
+
+  &:hover,
+  &:focus-visible {
+    animation: bgBreathe 3.0s ease-in-out 0.50s infinite;
+
+    &:before, &:after {
+      width: 100%;
+      height: 100%;
+      transition: width 0.3s ease, height 0.3s ease;
+      animation:
+        var(--download-border-sequence, downloadBorderBeatTwo) 8s ease-in-out infinite,
+        borderFlash 0.12s 0.26s 6 forwards;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+  }
+
+  &.alt-bracket {
+    &:before {
+      top: 0;
+      left: auto;
+      right: 0;
+      border-left: none;
+      border-right: 1px solid $darkLight;
+    }
+    &:after {
+      bottom: 0;
+      right: auto;
+      left: 0;
+      border-right: none;
+      border-left: 1px solid $darkLight;
+    }
+  }
+}
+
+.downloads > .downloadLink:nth-child(1) {
+  --download-border-sequence: downloadBorderBeatThree;
+}
+
+.downloads > .downloadLink:nth-child(2) {
+  --download-border-sequence: downloadBorderBeatOne;
+}
+
+@media only screen and (max-height: 500px) and (max-width: 1000px) {
+
+  .downloadsWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: auto;
+    gap: 2vw;
+    min-height: 100dvh;
+    box-sizing: border-box;
+    padding: var(--navbar-height) 2vw 30px;
+
+    .lastUpdated {
+      display: grid;
+      text-align: right;
+      padding-top: 0;
+      padding-right: 2vw;
+
+      p {
+        font-size: 1.15em;
+      }
+    }
+
+    .downloads {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      text-align: left;
+      padding-left: 2vw;
+      padding-top: 0 ;
+      gap: 10vh;
+
+      .downloadLink {
+        font-size: 1.05em;
+      }
+    }
+  }
+
+}
+
+/* ******************* Downloads End ******************* */
+

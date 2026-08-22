@@ -1,0 +1,27 @@
+@use "../abstracts" as *;
+
+// Systems particle-system debug UI (Stats.js + lil-gui). Toggle with the "D" key.
+.systems-stats {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  pointer-events: auto;
+  &:hover { opacity: 1; }
+}
+
+.systems-gui {
+  font-family: $main-font, sans-serif !important;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+  &:hover { opacity: 1; }
+
+  // Sit above the systems-nav (130001) so the panel is reachable when the sidebar is visible.
+  z-index: 140000 !important;
+
+  .title {
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+}
+
+// End DIGITIZEDNOISE.COM
+

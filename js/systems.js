@@ -1,882 +1,937 @@
-// systems.js (ES module)
-// Minimal Three.js coverflow-style carousel
+import * as THREE from 'three/webgpu';
+import {
+    pass, Fn, If, uniform, float, vec2, vec3, color,
+    instancedArray, instanceIndex, hash, time, mx_noise_float, length, smoothstep
+} from 'three/tsl';
+import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import Stats from 'three/addons/libs/stats.module.js';
+import GUI from 'three/addons/libs/lil-gui.module.min.js';
+import cryptoVisual from './systems-content/cryptoVisual.js';
+import digitalTwin from './systems-content/digitalTwin.js';
+import streamSystem from './systems-content/streamSystem.js';
 
-const { CSS2DRenderer, CSS2DObject } = THREE;
+// --- Vimeo Loading Helpers ---
+const dnVimeoPlayerCache = new WeakMap();
 
-
-
-const images = [
-    // Image order must match the links order below
-    '/img/systems/digitaltwin2.jpg',
-    '/img/systems/crypto.jpg',
-    '/img/systems/streamingfront.jpg',
-];
-
-// Destination HTML pages for each card (in the same order as images)
-const links = [
-    '/systems/DIGITAL_TWIN.html',
-    '/systems/CRYPTOVISUAL.html',
-    '/systems/T_STREAM.html',
-];
-
-// Display names for each system in the same order as images/links
-const systemNames = [
-    'xARM.SYSTEM',
-    'CRYPTOVISUAL.SYSTEM',
-    'STREAM.SYSTEM',
-];
-
-const container = document.getElementById('systems-carousel');
-container.style.position = 'relative';
-container.style.width = '100%';
-container.style.height = '100vh';
-
-// Scene, camera, renderer
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0000000);
-
-// Responsive FOV parameters
-const MIN_FOV = 43; // smallest FOV (at large widths)
-const MAX_FOV = 78; // largest FOV (at small widths)
-const MIN_W = 320;  // width at which FOV reaches MAX_FOV
-const MAX_W = 1920; // width at which FOV reaches MIN_FOV
-
-function computeResponsiveFov(width) {
-    const t = THREE.MathUtils.clamp((width - MIN_W) / (MAX_W - MIN_W), 0, 1);
-    // As width grows, FOV shrinks from MAX_FOV -> MIN_FOV
-    return THREE.MathUtils.lerp(MAX_FOV, MIN_FOV, t);
-}
-
-const initialFov = computeResponsiveFov(container.clientWidth);
-const camera = new THREE.PerspectiveCamera(initialFov, container.clientWidth / container.clientHeight, 0.1, 100);
-camera.position.set(0, 3.8, 10);
-camera.rotation.x = -0.33;
-camera.rotation.y = 0;
-camera.rotation.z = 0;
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setClearColor(0x000000, 0); // transparent clear
-renderer.setClearAlpha(0);            // explicit alpha clear
-container.appendChild(renderer.domElement);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.shadowMap.enabled = true;
-container.appendChild(renderer.domElement);
-
-
-// Lights
-const key = new THREE.DirectionalLight(0xffffff, 1.1);
-key.position.set(2, 4, 6);
-key.castShadow = true;
-scene.add(key);
-scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-
-// Helper: soft shadow texture (radial falloff)
-function makeShadowTexture(size = 256) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const ctx = c.getContext('2d');
-    const g = ctx.createRadialGradient(size / 2, size / 2, size * 0.2, size / 2, size / 2, size * 0.5);
-    g.addColorStop(0, 'rgba(0,0,0,0.35)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, size, size);
-    const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-    return tex;
-}
-
-const shadowTex = makeShadowTexture();
-
-// Materials
-const loader = new THREE.TextureLoader();
-const cardW = 4.5, cardH = 3;            // square covers; adjust for aspect if needed
-const gap = 5;                       // horizontal spacing between cards
-const maxTilt = THREE.MathUtils.degToRad(55);
-
-// Create cards
-const geometry = new THREE.PlaneGeometry(cardW, cardH, 1, 1);
-const floorY = -cardH * 0.8;
-
-// Fade texture for reflections (alpha top->bottom)
-function makeVerticalFade(size = 256) {
-    const c = document.createElement('canvas');
-    c.width = 4.5; c.height = size;
-    const ctx = c.getContext('2d');
-    const g = ctx.createLinearGradient(0, 0, 0, size);
-    g.addColorStop(0, 'rgba(255,255,255,1)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, c.width, c.height);
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = THREE.ClampToEdgeWrapping;
-    tex.wrapT = THREE.ClampToEdgeWrapping;
-    tex.needsUpdate = true;
-    return tex;
-}
-const reflectionFade = makeVerticalFade();
-
-const cards = images.map((src, i) => {
-    const tex = loader.load(src);
-    tex.colorSpace = THREE.SRGBColorSpace;
-
-    // Main card
-    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.0 });
-    const mesh = new THREE.Mesh(geometry, mat);
-    mesh.castShadow = true;
-    mesh.receiveShadow = false;
-
-    // Add a floating soft shadow quad as a child
-    const shadow = new THREE.Mesh(
-        new THREE.PlaneGeometry(cardW * 0.9, cardH * 0.5),
-        new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
-    );
-    shadow.rotation.x = -Math.PI / 2; // lay flat
-    shadow.position.set(0, -cardH * 0.7, 0);
-    mesh.add(shadow);
-    // Disable raycast on shadow to avoid intercepting clicks
-    shadow.raycast = () => {};
-
-    // Reflection (mirrored clone with fade)
-    const reflMat = new THREE.MeshBasicMaterial({
-        map: tex,
-        color: 0x999999,
-        transparent: true,
-        opacity: 0.5,
-        alphaMap: reflectionFade,
-        depthWrite: false
-    });
-    const reflection = new THREE.Mesh(geometry, reflMat);
-    reflection.scale.y = -1; // mirror vertically across the floor plane
-    reflection.position.y = 2 * floorY; // reflect across y = floorY
-    // Disable raycast on reflection so clicks go to the main card
-    reflection.raycast = () => {};
-
-    // Group containing card + reflection
-    const group = new THREE.Group();
-    group.add(mesh);
-    group.add(reflection);
-    // Store link and index for interaction
-    group.userData = { index: i, link: links[i] };
-
-    scene.add(group);
-    return group;
-});
-
-// TEXT
-
-// CSS2DRenderer for 2D labels
-const labelRenderer = new CSS2DRenderer();
-labelRenderer.setSize(container.clientWidth, container.clientHeight);
-labelRenderer.domElement.style.position = 'absolute';
-labelRenderer.domElement.style.top = '0px';
-labelRenderer.domElement.style.left = '0px';
-labelRenderer.domElement.style.pointerEvents = 'none';
-container.appendChild(labelRenderer.domElement);
-
-// Simple "Hello World" label
-const systemTitles = document.createElement('div');
-systemTitles.classList.add('systemTitle');
-const helloLabel = new CSS2DObject(systemTitles);
-helloLabel.position.set(0,  cardH * 0.9, 0); // above the centered cards
-scene.add(helloLabel);
-
-// Adding Page Title (CSS2D label)
-const pageTitleEl = document.createElement('div');
-// Use .pageTitle styling from style.scss exclusively
-pageTitleEl.classList.add('pageTitle');
-// Use the document's <title> text if available, otherwise a sensible default
-pageTitleEl.textContent = 'SYSTEMS';
-const systemPage = new CSS2DObject(pageTitleEl);
-systemPage.position.set(0, 5, 0); // above the centered cards
-scene.add(systemPage);
-
-// TEXT
-
-// State for interaction
-const startIndex = Math.floor(cards.length / 2); // start from the middle (e.g., 3rd card in a 5-card set)
-let index = startIndex;       // snapped index (integer)
-let target = startIndex;      // target position (float)
-let velocity = 0;    // for inertial drag
-
-// Set initial label to match the initially centered card
-systemTitles.textContent = systemNames[startIndex] || '';
-
-// Click gating thresholds: only allow clicks when the card is very near center and motion is minimal
-const CLICK_CENTER_EPS = 0.25;   // in index units; lower = stricter
-const CLICK_SPEED_EPS = 0.003;   // lower = require slower motion
-// Drag-to-click cancellation: if the pointer moved beyond this normalized threshold during a press,
-// suppress the subsequent click so dragging from side to center won't trigger navigation.
-const DRAG_CLICK_CANCEL_EPS = 0.02;
-
-// Levitation parameters
-const clock = new THREE.Clock();
-const BOB_AMP = 0.14;      // how high the center card floats (in world units)
-const BOB_SPEED = 0.2;    // cycles per second (slow and subtle)
-let currentBobOffset = 0;  // updated each frame in animate()
-let lastCenteredIndex = -1; // track last center to update label text only on change
-
-// Positioning / layout update
-function layout(t) {
-    const centerIdx = Math.round(t);
-
-
-
-    // Update the CSS2D label when the centered card changes
-    if (centerIdx !== lastCenteredIndex) {
-        systemTitles.textContent = systemNames[centerIdx] || '';
-        lastCenteredIndex = centerIdx;
+function getVimeoPlayerForIframe(iframe) {
+    if (!window.Vimeo?.Player) return null;
+    let player = dnVimeoPlayerCache.get(iframe);
+    if (!player) {
+        player = new Vimeo.Player(iframe);
+        dnVimeoPlayerCache.set(iframe, player);
     }
-
-    for (let i = 0; i < cards.length; i++) {
-        const offset = i - t; // distance from center in index units
-
-        // Position: horizontal offset + slight Z pushback for side items
-        const x = offset * gap;
-        const z = -Math.min(Math.abs(offset) * 1.5, 6);
-
-        // Scale: emphasize the centered card
-        const s = THREE.MathUtils.lerp(0.75, 1.3, Math.max(0, 1 - Math.abs(offset)));
-
-        // Rotation Y: tilt side cards
-        const ry = THREE.MathUtils.clamp(-offset, -1, 1) * maxTilt;
-
-        const card = cards[i];
-        card.position.set(x, 0, z);
-        card.rotation.set(0, ry, 0);
-        card.scale.setScalar(s);
-
-        // Gentle levitation only for the centered card
-        const isCenter = (i === centerIdx);
-        const mesh = card.children[0];        // main card mesh
-        const reflection = card.children[1];  // mirrored mesh
-
-        const bobY = isCenter ? currentBobOffset : 0;
-        mesh.position.y = bobY;
-        // Keep the reflection mirrored across the floor plane despite bobbing
-        reflection.position.y = 2 * floorY - bobY;
-
-        // Subtle drop shadow offset based on tilt; keep it near the floor even when bobbing
-        const shadow = mesh.children[0];
-        shadow.position.y = -cardH * (0.7 + 0.05 * Math.abs(offset)) - bobY;
-        shadow.scale.set(THREE.MathUtils.lerp(0.9, 1.2, Math.abs(offset)), 1, 1);
-        shadow.material.opacity = THREE.MathUtils.lerp(0.5, 0.15, Math.min(1, Math.abs(offset)));
-    }
+    return player;
 }
 
-// Input: wheel
-container.addEventListener('wheel', (e) => {
-    const delta = Math.sign(e.deltaY);
-    target = THREE.MathUtils.clamp(target + delta, 0, cards.length - 1);
-});
-
-// Input: arrows
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') target = Math.min(target + 1, cards.length - 1);
-    if (e.key === 'ArrowLeft') target = Math.max(target - 1, 0);
-});
-
-// Input: drag (mouse/touch)
-let dragging = false, lastX = 0;
-let accumulatedDrag = 0; // sum of absolute normalized dx during a press
-let suppressNextClick = false; // set true after a drag to cancel the click event
-const onDown = (x) => { dragging = true; lastX = x; velocity = 0; accumulatedDrag = 0; };
-const onMove = (x) => {
-    if (!dragging) return;
-    const dx = (x - lastX) / container.clientWidth; // normalize
-    lastX = x;
-    target -= dx * 5; // sensitivity
-    target = THREE.MathUtils.clamp(target, 0, cards.length - 1);
-    velocity = -dx * 5;
-    accumulatedDrag += Math.abs(dx);
-};
-const onUp = () => {
-    dragging = false;
-    if (accumulatedDrag > DRAG_CLICK_CANCEL_EPS) suppressNextClick = true;
-};
-container.addEventListener('mousedown', (e) => onDown(e.clientX));
-window.addEventListener('mousemove', (e) => onMove(e.clientX));
-window.addEventListener('mouseup', onUp);
-container.addEventListener('touchstart', (e) => onDown(e.touches[0].clientX), { passive: true });
-container.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX), { passive: true });
-container.addEventListener('touchend', onUp);
-
-// Link handling: raycaster for hover and click
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-let hoverLink = null;
-
-function updateHover(clientX, clientY) {
-    const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-
-    // Intersect only the main card meshes (child[0] of each group)
-    const mainMeshes = cards.map(g => g.children[0]);
-    const hits = raycaster.intersectObjects(mainMeshes, false);
-    if (hits.length > 0) {
-      const group = hits[0].object.parent; // main mesh's parent is the group
-      const groupIndex = group.userData && typeof group.userData.index === 'number' ? group.userData.index : -1;
-      const centerDistance = Math.abs(groupIndex - index);
-      const isCentered = centerDistance < CLICK_CENTER_EPS && Math.abs(velocity) < CLICK_SPEED_EPS;
-      hoverLink = isCentered && group.userData && group.userData.link ? group.userData.link : null;
-      renderer.domElement.style.cursor = hoverLink ? 'pointer' : '';
-    } else {
-      hoverLink = null;
-      renderer.domElement.style.cursor = '';
-    }
-}
-
-renderer.domElement.addEventListener('mousemove', (e) => updateHover(e.clientX, e.clientY));
-renderer.domElement.addEventListener('touchstart', (e) => {
-    if (e.touches && e.touches[0]) updateHover(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: true });
-renderer.domElement.addEventListener('click', (e) => {
-    // If the previous interaction was a drag, suppress this click to avoid accidental navigation.
-    if (suppressNextClick) { suppressNextClick = false; return; }
-    // Recompute hover target at click time to ensure only centered card can be clicked
-    updateHover(e.clientX, e.clientY);
-    if (hoverLink) {
-        // Open the infographic overlay for the currently centered card
-        const centeredIndex = Math.round(index);
-        openOverlay(centeredIndex);
-    }
-});
-
-// Animate: ease towards target, then snap to nearest index when slow
-function animate() {
-    requestAnimationFrame(animate);
-
-    // Smooth damp
-    const stiffness = 0.008; // larger = snappier
-    const damping = 0.8;
-    const delta = target - index;
-    velocity = velocity * damping + delta * stiffness;
-    index += velocity;
-
-    // Update levitation offset (slow sine wave)
-    const tsec = clock.getElapsedTime();
-    currentBobOffset = Math.sin(tsec * 2 * Math.PI * BOB_SPEED) * BOB_AMP;
-
-    layout(index);
-    renderer.render(scene, camera);
-    labelRenderer.render(scene, camera);
-}
-animate();
-
-// Resize
-window.addEventListener('resize', onResize);
-function onResize() {
-    const w = container.clientWidth, h = container.clientHeight;
-    camera.fov = computeResponsiveFov(w);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-    labelRenderer.setSize(w, h);
-}
-
-// Set initial responsive sizes/FOV
-onResize();
-
-// === Infographic Overlay (expand centered card) ===
-// Lightweight modal to show rich content for the center card.
-// You can optionally define window.carouselInfo = [htmlStringPerCard...] elsewhere to override content.
-(function initInfographicOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'systems-overlay';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-hidden', 'true');
-    Object.assign(overlay.style, {
-        position: 'absolute',
-        inset: '0',
-        display: 'none',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)',
-        zIndex: '1',
-        pointerEvents: 'auto',
-    });
-
-    const panel = document.createElement('div');
-    // ... panel styling ...
-    Object.assign(panel.style, {
-        width: '85%',
-        maxHeight: '600px',
-        overflowY: 'auto',
-        background: 'rgba(0,0,0,0.4)',
-        border: '1px solid rgba(255,255,255,0.7)',
-        borderRadius: '1px',
-        backdropFilter: 'blur(6px)',
-        color: '#eaeaea',
-        padding: '24px 24px 16px 24px',
-        position: 'relative'
-    });
-
-    const closeBtn = document.createElement('button');
-    closeBtn.setAttribute('aria-label', 'Close');
-    closeBtn.textContent = '×';
-    Object.assign(closeBtn.style, {
-        position: 'absolute',
-        top: '8px',
-        right: '12px',
-        fontSize: '28px',
-        lineHeight: '28px',
-        background: 'transparent',
-        border: 'none',
-        color: '#ddd',
-        cursor: 'pointer'
-    });
-
-    const mediaEl = document.createElement('div');
-    Object.assign(mediaEl.style, {
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        gap: '16px',
-        marginBottom: '16px'
-    });
-
-    const contentEl = document.createElement('div');
-    Object.assign(contentEl.style, {
-        fontSize: '16px',
-        lineHeight: '1.55',
-        color: '#d6d6d6',
-        marginBottom: '16px'
-    });
-
-    const actionsEl = document.createElement('div');
-    Object.assign(actionsEl.style, {
-        display: 'flex',
-        gap: '12px',
-        marginTop: '8px'
-    });
-
-    panel.appendChild(closeBtn);
-    panel.appendChild(mediaEl);
-    panel.appendChild(contentEl);
-    panel.appendChild(actionsEl);
-
-    overlay.appendChild(panel);
-    container.appendChild(overlay);
-
-    let previousBodyOverflow = '';
-    let lastFocusedElement = null;
-
-    // Ensure a compatible import map exists so module scripts like /coin.js can resolve 'three' and example modules
-    function ensureImportMap() {
-        if (window.__systemsOverlayImportMapInjected) return;
-        // If page already has an importmap, respect it
-        const existing = document.querySelector('script[type="importmap"]');
-        if (existing) { window.__systemsOverlayImportMapInjected = true; return; }
-        const map = {
-            imports: {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js",
-                "three/examples/jsm/controls/OrbitControls": "https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/controls/OrbitControls.js",
-                "three/examples/jsm/loaders/FBXLoader": "https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/FBXLoader.js",
-                "three/examples/jsm/environments/RoomEnvironment": "https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/environments/RoomEnvironment.js",
-                "three/examples/jsm/postprocessing/EffectComposer": "https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js",
-                "three/examples/jsm/postprocessing/RenderPass": "https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/postprocessing/RenderPass.js",
-                "three/examples/jsm/postprocessing/ShaderPass": "https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/postprocessing/ShaderPass.js"
-            }
+function setupVimeoPlaceholders(root) {
+    if (!window.Vimeo?.Player) return;
+    const vimeoIframes = Array.from(root.querySelectorAll('iframe[src*="player.vimeo.com/video/"][src*="background=1"]'));
+    vimeoIframes.forEach((iframe) => {
+        const container = iframe.closest('.iframe-container, .images, .carousel-item, .gallery-item');
+        if (!container) return;
+        let placeholder = container.querySelector('.vimeo-placeholder');
+        if (!placeholder) {
+            placeholder = document.createElement('video');
+            const isPortrait = container.classList.contains('portrait') || container.closest('.portrait');
+            placeholder.src = isPortrait ? '/media/webm/loading.webm' : '/media/webm/loading-2.webm';
+            placeholder.className = 'vimeo-placeholder';
+            placeholder.autoplay = true;
+            placeholder.loop = true;
+            placeholder.muted = true;
+            placeholder.playsInline = true;
+            container.insertBefore(placeholder, iframe);
+        }
+        const player = getVimeoPlayerForIframe(iframe);
+        if (!player) return;
+        container.classList.add('is-loading');
+        const cleanup = () => {
+            placeholder.style.opacity = '0';
+            container.classList.remove('is-loading');
+            setTimeout(() => { if (placeholder.parentNode) placeholder.remove(); }, 800);
         };
-        const s = document.createElement('script');
-        s.type = 'importmap';
-        s.textContent = JSON.stringify(map, null, 2);
-        document.head.appendChild(s);
-        window.__systemsOverlayImportMapInjected = true;
-    }
+        player.on('play', cleanup);
+        player.getPaused().then(paused => { if (!paused) cleanup(); });
+    });
+}
 
-    // Ensure any <script> tags inside injected HTML execute (including type="module").
-    function executeScripts(container) {
-        const scripts = Array.from(container.querySelectorAll('script'));
-        for (const oldScript of scripts) {
-            const newScript = document.createElement('script');
-            // Copy attributes
-            for (const attr of oldScript.attributes) {
-                newScript.setAttribute(attr.name, attr.value);
-            }
-            // Inline content
-            if (oldScript.textContent) {
-                newScript.textContent = oldScript.textContent;
-            }
-            // Replace to trigger execution
-            oldScript.parentNode.replaceChild(newScript, oldScript);
-        }
-    }
-
-    function fillDefaultContent(i) {
-        // Default image preview
-        const img = document.createElement('img');
-        img.src = images[i];
-        img.alt = systemNames[i] || 'preview';
-        Object.assign(img.style, {
-            width: '30%',
-            height: 'auto',
-            borderRadius: '10px',
-            border: '1px solid rgba(255,255,255,0.06)',
-        });
-        mediaEl.appendChild(img);
-
-        // Default placeholder text
-        const p = document.createElement('p');
-        p.textContent = 'Add videos, galleries, and detailed copy for this system here. You can override this content by defining window.carouselInfo[index] as custom HTML.';
-        contentEl.appendChild(p);
-    }
-
-    window.openOverlay = function openOverlay(i) {
-        // Save focus
-        lastFocusedElement = document.activeElement;
-
-        // Clear old content
-        mediaEl.innerHTML = '';
-        contentEl.innerHTML = '';
-
-        // If user provided custom HTML content for this index, render it
-        if (window.carouselInfo && window.carouselInfo[i]) {
-            // Allow either string or object with media and content fields
-            const custom = window.carouselInfo[i];
-            if (typeof custom === 'string') {
-                contentEl.innerHTML = custom;
-            } else if (custom && typeof custom === 'object') {
-                if (custom.mediaHtml) {
-                    mediaEl.innerHTML = custom.mediaHtml;
-                } else if (custom.media && Array.isArray(custom.media)) {
-                    custom.media.forEach(src => {
-                        const el = document.createElement('img');
-                        el.src = src;
-                        el.style.width = '100%';
-                        el.style.borderRadius = '10px';
-                        mediaEl.appendChild(el);
-                    });
-                }
-                if (custom.html) contentEl.innerHTML = custom.html;
-                if (!custom.mediaHtml && !custom.media && !custom.html) fillDefaultContent(i);
-            } else {
-                fillDefaultContent(i);
-            }
-        } else {
-            fillDefaultContent(i);
-        }
-
-        // Ensure an import map exists for module scripts like /coin.js
-        ensureImportMap();
-        // If the injected content contains a .boxC container with no height, give it a sensible default so WebGL can size correctly
-        const boxC = panel.querySelector('.boxC');
-        if (boxC && boxC.clientHeight < 40) {
-            boxC.style.minHeight = '180px';
-            boxC.style.height = '180px';
-            boxC.style.position = boxC.style.position || 'relative';
-        }
-        // Execute any <script> tags inside the newly injected content
-        executeScripts(panel);
-
-        overlay.style.display = 'flex';
-        overlay.setAttribute('aria-hidden', 'false');
-        previousBodyOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-
-        // Focus close button
-        setTimeout(() => closeBtn.focus(), 50);
+/**
+ * SystemManager - Manages UI and navigation for the systems section.
+ */
+class SystemManager {
+    static CONFIG = {
+        SYSTEMS: [
+            { name: 'SYSTEM SLOT 1', isPlaceholder: true },
+            { name: 'SYSTEM SLOT 2', isPlaceholder: true },
+            { name: 'SYSTEM SLOT 3', isPlaceholder: true },
+            { name: 'DIGITAL TWIN' }, // Index 3
+            { name: 'SYSTEM SLOT 4', isPlaceholder: true },
+            { name: 'SYSTEM SLOT 5', isPlaceholder: true },
+            { name: 'SYSTEM SLOT 6', isPlaceholder: true },
+            { name: 'STREAM.SYSTEM' }, // Index 7
+            { name: 'CRYPTOVISUAL' }, // Index 8
+            { name: 'SYSTEM SLOT 7', isPlaceholder: true },
+            { name: 'SYSTEM SLOT 8', isPlaceholder: true },
+            { name: 'SYSTEM SLOT 9', isPlaceholder: true }
+        ],
+        SECTIONS: [
+            { label: 'RED',   infoIndex: 3 },
+            { label: 'GREEN', infoIndex: 8 },
+            { label: 'BLUE',  infoIndex: 7 }
+        ]
     };
 
-    function closeOverlay() {
-        overlay.style.display = 'none';
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = previousBodyOverflow || '';
-        if (lastFocusedElement) lastFocusedElement.focus();
+    #container;
+    #currentSection = null;
+    #selectedIndex = -1;
+    #carouselInfo = [];
+    #isTransitioning = false;
+
+    // UI related
+    #uiContent;
+    #uiInnerContent;
+    #infoPanel;
+    #systemsNav;
+    #isMouseOverPanel = false;
+    #scrollTracker = 0;
+    #scrollDelayStartTime = Date.now();
+    #typewriterTimeouts = [];
+    #lastFocusedElement = null;
+    #backgroundInertState = [];
+
+    constructor(container, carouselInfo = []) {
+        this.#container = container || document.body;
+        this.#carouselInfo = carouselInfo;
     }
 
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeOverlay();
-    });
-    closeBtn.addEventListener('click', closeOverlay);
+    async init() {
+        this.#setupEvents();
+        this.#setupUI();
 
-    window.addEventListener('keydown', (e) => {
-        if (overlay.style.display === 'none') return;
+        const greenSection = SystemManager.CONFIG.SECTIONS.find(s => s.label === 'GREEN');
+        if (greenSection) this.focusOn(greenSection, false);
 
-        if (e.key === 'Escape') {
-            closeOverlay();
+        this.#animate();
+    }
+
+    #setupEvents() {
+        window.addEventListener('resize', this.#onResize.bind(this));
+
+        document.querySelectorAll('.sys-btn').forEach(btn => {
+            const previewButtonColor = () => {
+                const isCurrentlyOpen = this.#infoPanel?.classList.contains('is-active');
+                if (!isCurrentlyOpen) {
+                    window.systemsVisual?.setColor(btn.getAttribute('data-section'));
+                }
+            };
+
+            const restorePreviewColor = () => {
+                requestAnimationFrame(() => {
+                    const isCurrentlyOpen = this.#infoPanel?.classList.contains('is-active');
+                    if (isCurrentlyOpen) return;
+
+                    const focusedButton = document.querySelector('.sys-btn:focus-visible');
+                    const hoveredButton = document.querySelector('.sys-btn:hover');
+                    const previewButton = focusedButton || hoveredButton;
+
+                    if (previewButton) {
+                        window.systemsVisual?.setColor(previewButton.getAttribute('data-section'));
+                    } else if (this.#currentSection) {
+                        window.systemsVisual?.setColor(this.#currentSection.label);
+                    }
+                });
+            };
+
+            btn.addEventListener('click', () => {
+                const label = btn.getAttribute('data-section');
+                const section = SystemManager.CONFIG.SECTIONS.find(s => s.label === label);
+                if (section) {
+                    this.#lastFocusedElement = btn;
+                    this.focusOn(section);
+                }
+            });
+
+            btn.addEventListener('mouseenter', previewButtonColor);
+            btn.addEventListener('focus', previewButtonColor);
+            btn.addEventListener('mouseleave', restorePreviewColor);
+            btn.addEventListener('blur', restorePreviewColor);
+        });
+    }
+
+    #onResize() {
+        if (this.#selectedIndex !== -1) {
+            const isCurrentlyActive = this.#infoPanel?.classList.contains('is-active') || false;
+            this.#performUIUpdate(this.#selectedIndex, !isCurrentlyActive);
+        }
+    }
+
+    #setupUI() {
+        this.#systemsNav    = document.querySelector('.systems-nav');
+        this.#uiContent     = document.getElementById('info-content');
+        this.#uiInnerContent = document.getElementById('info-inner-content');
+        this.#infoPanel     = document.getElementById('systems-info-panel');
+
+        if (this.#infoPanel) {
+            const enter = () => { this.#isMouseOverPanel = true; };
+            const leave = () => {
+                this.#isMouseOverPanel = false;
+                if (this.#uiContent) this.#scrollTracker = this.#uiContent.scrollTop;
+                this.#scrollDelayStartTime = Date.now();
+            };
+
+            this.#infoPanel.addEventListener('mouseenter', enter);
+            this.#infoPanel.addEventListener('mouseleave', leave);
+            this.#infoPanel.addEventListener('touchstart', enter, { passive: true });
+            this.#infoPanel.addEventListener('touchend',   leave, { passive: true });
+
+            this.#uiContent?.addEventListener('scroll', () => {
+                if (this.#isMouseOverPanel) this.#scrollTracker = this.#uiContent.scrollTop;
+            }, { passive: true });
+
+            document.querySelector('.info-panel-close')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeInfoPanel();
+            });
+
+            this.#infoPanel.addEventListener('click', (e) => {
+                if (e.target === this.#infoPanel) this.closeInfoPanel();
+            });
         }
 
-        if (e.key === 'Tab') {
-            const focusableElements = panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), iframe');
-            if (focusableElements.length === 0) return;
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById('lightbox')?.classList.contains('active')) return;
+            if (document.body.dataset.navOpen === 'true') return;
 
-            const firstElement = focusableElements[0];
-            const lastElement = focusableElements[focusableElements.length - 1];
+            if (e.key === 'Escape' && this.#infoPanel?.classList.contains('is-active')) {
+                e.preventDefault();
+                this.closeInfoPanel();
+                return;
+            }
 
-            if (e.shiftKey) { // Shift + Tab
-                if (document.activeElement === firstElement) {
-                    lastElement.focus();
-                    e.preventDefault();
+            if (e.key === 'Tab' && this.#infoPanel?.classList.contains('is-active')) {
+                this.#trapPanelFocus(e);
+            }
+        });
+
+        window.closeInfoPanel = () => this.closeInfoPanel();
+    }
+
+    async focusOn(section, openPanel = true) {
+        if (this.#isTransitioning) return;
+
+        this.#currentSection = section;
+        this.#selectedIndex  = section.infoIndex;
+
+        document.querySelectorAll('.sys-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-section') === section.label);
+        });
+
+        window.systemsVisual?.setColor(section.label);
+
+        const isCurrentlyOpen = this.#infoPanel?.classList.contains('is-active');
+        const skipToggle      = !openPanel && !isCurrentlyOpen;
+
+        // Auto-collapse the systems-nav when opening the panel
+        if (openPanel) {
+            document.body.classList.add('systems-nav-collapsed');
+        }
+
+        this.#performUIUpdate(this.#selectedIndex, skipToggle);
+    }
+
+    #performUIUpdate(i, skipToggle = false) {
+        const data = SystemManager.CONFIG.SYSTEMS[i];
+        if (i !== -1 && data) {
+            if (this.#uiContent) {
+                this.#uiContent.scrollTop = 0;
+                this.#scrollTracker = 0;
+                this.#scrollDelayStartTime = Date.now();
+            }
+
+            const info = this.#carouselInfo[i];
+            if (this.#uiInnerContent) {
+                this.#uiInnerContent.innerHTML = info
+                    ? (typeof info === 'string' ? info : (info.html || ''))
+                    : `<p>System details for ${data.name} will appear here.</p>`;
+
+                this.#clearTypewriterTimeouts();
+                this.#uiInnerContent.querySelectorAll('.typewriter-text').forEach(el => this.#typeWriter(el));
+
+                if (window.ClientsCaret) {
+                    window.ClientsCaret.init(this.#uiInnerContent);
                 }
-            } else { // Tab
-                if (document.activeElement === lastElement) {
-                    firstElement.focus();
-                    e.preventDefault();
+
+                if (this.#uiInnerContent.querySelector('.codeContainer')) {
+                    CodeMagnifier.init('.codeContainer');
+                }
+
+                if (window.imgCarousel) window.imgCarousel.startAutoPlay();
+
+                setupVimeoPlaceholders(this.#uiInnerContent);
+            }
+        }
+
+        if (this.#infoPanel) {
+            const desktop = this.#isDesktopOrLandscape();
+            this.#infoPanel.classList.toggle('desktop-layout', desktop);
+
+            if (window.HorizontalScroll) {
+                if (desktop && this.#selectedIndex !== -1) {
+                    window.HorizontalScroll.init('.right-scroll-wrapper', '.layout-scroll-row');
+                } else {
+                    window.HorizontalScroll.destroy('.right-scroll-wrapper');
+                }
+            }
+
+            if (!skipToggle) {
+                const active = this.#selectedIndex !== -1;
+                const wasActive = this.#infoPanel.classList.contains('is-active');
+                this.#infoPanel.classList.toggle('is-active', active);
+                this.#infoPanel.setAttribute('aria-hidden', String(!active));
+                this.#setBackgroundInert(active);
+
+                const isLightboxMode = window.innerWidth <= 1100 && !desktop;
+                document.body.style.overflow = (active && isLightboxMode) ? 'hidden' : '';
+                document.documentElement.style.overflow = (active && isLightboxMode) ? 'hidden' : '';
+
+                if (active && !wasActive) {
+                    requestAnimationFrame(() => document.querySelector('.info-panel-close')?.focus());
                 }
             }
         }
+    }
+
+    #isDesktopOrLandscape() {
+        const isLandscapeMobile = window.innerWidth <= 950 && window.innerHeight <= 500 && window.innerWidth > window.innerHeight;
+        const isMobileLayout    = window.innerWidth <= 1100 && !isLandscapeMobile;
+        return !isMobileLayout;
+    }
+
+    #setBackgroundInert(shouldInert) {
+        if (!this.#infoPanel) return;
+
+        if (shouldInert) {
+            if (this.#backgroundInertState.length) return;
+
+            const seen = new Set();
+            const allowedSelector = '.info-panel-close, .menubar, .navModal';
+            const rememberAndInert = (element) => {
+                if (seen.has(element)) return;
+                seen.add(element);
+                this.#backgroundInertState.push({ element, wasInert: element.hasAttribute('inert') });
+                element.setAttribute('inert', '');
+            };
+            const inertOutsideAllowedControls = (element) => {
+                if (element.matches(allowedSelector)) return;
+                if (!element.querySelector(allowedSelector)) {
+                    rememberAndInert(element);
+                    return;
+                }
+                Array.from(element.children).forEach(inertOutsideAllowedControls);
+            };
+            let node = this.#infoPanel;
+
+            while (node.parentElement) {
+                Array.from(node.parentElement.children).forEach((sibling) => {
+                    if (sibling === node || sibling.matches('script, style, link') || seen.has(sibling)) return;
+                    inertOutsideAllowedControls(sibling);
+                });
+                node = node.parentElement;
+            }
+            return;
+        }
+
+        this.#backgroundInertState.forEach(({ element, wasInert }) => {
+            if (wasInert) {
+                element.setAttribute('inert', '');
+            } else {
+                element.removeAttribute('inert');
+            }
+        });
+        this.#backgroundInertState = [];
+    }
+
+    #trapPanelFocus(e) {
+        const closeControl = document.querySelector('.info-panel-close');
+        const focusableElements = [closeControl, ...this.#infoPanel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), iframe')]
+            .filter((element) => element && !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true');
+
+        if (focusableElements.length === 0) {
+            e.preventDefault();
+            this.#infoPanel.focus();
+            return;
+        }
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (!focusableElements.includes(document.activeElement)) {
+            e.preventDefault();
+            firstElement.focus();
+        } else if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+        }
+    }
+
+    #typeWriter(element) {
+        element.innerHTML = element.innerHTML.trim();
+        element.classList.add('with-cursor');
+    }
+
+    #clearTypewriterTimeouts() {
+        this.#typewriterTimeouts.forEach(t => clearTimeout(t));
+        this.#typewriterTimeouts = [];
+    }
+
+    closeInfoPanel() {
+        const elementToRestore = this.#lastFocusedElement;
+        this.#lastFocusedElement = null;
+        this.#selectedIndex = -1;
+        this.#clearTypewriterTimeouts();
+        if (window.imgCarousel) window.imgCarousel.stopAutoPlay();
+        if (this.#infoPanel) {
+            this.#infoPanel.querySelectorAll('iframe').forEach(iframe => iframe.remove());
+        }
+        
+        // Auto-expand the systems-nav when closing the panel
+        document.body.classList.remove('systems-nav-collapsed');
+
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        this.#performUIUpdate(-1);
+
+        if (elementToRestore?.isConnected) {
+            elementToRestore.focus();
+        }
+    }
+
+    #animate() {
+        requestAnimationFrame(this.#animate.bind(this));
+    }
+}
+
+/**
+ * CodeMagnifier - A magnifying glass effect for code containers.
+ */
+class CodeMagnifier {
+    static #instance = null;
+    #el;
+    #content;
+    #target = null;
+    #zoom = 2;
+
+    constructor() {
+        if (CodeMagnifier.#instance) return CodeMagnifier.#instance;
+        this.#createElements();
+        CodeMagnifier.#instance = this;
+    }
+
+    #createElements() {
+        this.#el = document.createElement('div');
+        this.#el.className = 'code-magnifier';
+        this.#content = document.createElement('div');
+        this.#content.className = 'magnifier-content';
+        this.#el.appendChild(this.#content);
+        document.body.appendChild(this.#el);
+    }
+
+    attach(container) {
+        if (container.dataset.magnifierAttached) return;
+        container.addEventListener('mouseenter', (e) => this.#onEnter(e, container));
+        container.addEventListener('mousemove',  (e) => this.#onMove(e));
+        container.addEventListener('mouseleave', ()  => this.#onLeave());
+        container.dataset.magnifierAttached = 'true';
+    }
+
+    #onEnter(e, container) {
+        if (window.innerWidth <= 1100) return;
+        this.#target = container;
+        this.#content.innerHTML = container.innerHTML;
+        this.#el.style.display = 'block';
+        this.#update(e);
+    }
+
+    #onMove(e) { if (this.#target) this.#update(e); }
+
+    #onLeave() {
+        this.#target = null;
+        this.#el.style.display = 'none';
+        this.#content.innerHTML = '';
+    }
+
+    #update(e) {
+        if (!this.#target) return;
+        const rect = this.#target.getBoundingClientRect();
+        this.#el.style.left = `${e.clientX}px`;
+        this.#el.style.top  = `${e.clientY}px`;
+
+        const relX = (e.clientX - rect.left) + this.#target.scrollLeft;
+        const relY = (e.clientY - rect.top)  + this.#target.scrollTop;
+        const magW = 180, magH = 180;
+        this.#content.style.transform =
+            `translate(${-relX * this.#zoom + magW / 2}px, ${-relY * this.#zoom + magH / 2}px) scale(${this.#zoom})`;
+    }
+
+    static init(selector) {
+        const m = new CodeMagnifier();
+        document.querySelectorAll(selector).forEach(el => m.attach(el));
+    }
+}
+
+/**
+ * SystemsVisual - WebGPU curl-noise GPU particle system.
+ * Particles flow through a divergence-free noise field, color-reacting to the active section.
+ * Rendering: SpriteNodeMaterial + AdditiveBlending + Bloom post-processing.
+ */
+class SystemsVisual {
+    static #COLOR_MAP = {
+        RED:   new THREE.Color(0xFF2200),
+        GREEN: new THREE.Color(0x00FF00),
+        BLUE:  new THREE.Color(0x0062FF)
+    };
+
+    static #PARAMS = {
+        particleCount:  2000,
+        noiseScale:     0.18,
+        flowSpeed:      0.9,
+        curlAmp:        10.6,
+        attractPull:    30.0,
+        damping:        0.94,
+        particleSize:   0.055,
+        colorIntensity: 2.4,
+        bounds:         7.5,
+        timeScale:      0.12,
+        bloomStrength:  1.8,
+        bloomRadius:    0.1,
+        bloomThreshold: 0.0,
+        showDebug:      false
+    };
+
+    #renderer     = null;
+    #scene        = null;
+    #camera       = null;
+    #postProc     = null;
+    #bloomPass    = null;
+    #stats        = null;
+    #gui          = null;
+    #clock        = new THREE.Clock();
+
+    #targetColor  = SystemsVisual.#COLOR_MAP.GREEN.clone();
+    #currentColor = SystemsVisual.#COLOR_MAP.GREEN.clone();
+
+    #params       = { ...SystemsVisual.#PARAMS };
+
+    // TSL uniforms — bridged to CPU params each frame
+    #u = {};
+
+    // Pointer attractor — screen pointer unprojected onto the z=0 plane
+    #pointerNDC     = new THREE.Vector2();
+    #raycaster      = new THREE.Raycaster();
+    #attractorPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    #attractorWorld = new THREE.Vector3();
+    #pointerActive  = false;
+
+    // Compute nodes
+    #computeInit    = null;
+    #computeUpdate  = null;
+    #particleMesh   = null;
+    #positionBuffer = null;
+    #velocityBuffer = null;
+    #lifeBuffer     = null;
+
+    async init() {
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;';
+        document.body.insertBefore(canvas, document.body.firstChild);
+
+        try {
+            this.#renderer = new THREE.WebGPURenderer({ canvas, antialias: true, alpha: true });
+            await this.#renderer.init();
+        } catch {
+            canvas.remove();
+            return;
+        }
+
+        this.#renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.#renderer.setSize(window.innerWidth, window.innerHeight);
+        this.#renderer.setClearColor(0x000000, 0);
+
+        this.#scene  = new THREE.Scene();
+        this.#camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        this.#camera.position.set(0, 0, 14);
+
+        this.#createUniforms();
+        this.#updateReach();
+        this.#buildParticleSystem();
+
+        // Seed initial positions
+        await this.#renderer.computeAsync(this.#computeInit);
+
+        // Post-processing: bloom on the particle scene
+        const scenePass = pass(this.#scene, this.#camera);
+        const bloomPass = bloom(scenePass, this.#params.bloomStrength, this.#params.bloomRadius, this.#params.bloomThreshold);
+        this.#bloomPass = bloomPass;
+        this.#postProc  = new THREE.PostProcessing(this.#renderer);
+        this.#postProc.outputNode = bloomPass;
+
+        this.#setupDebugUI();
+
+        window.addEventListener('resize', this.#onResize);
+        window.addEventListener('keydown', this.#onKeyDown);
+        this.#setupPointer();
+
+        this.#clock.start();
+
+        this.#renderer.setAnimationLoop(() => {
+            const dt = Math.min(this.#clock.getDelta(), 0.05);
+            this.#updateFrame(dt);
+        });
+    }
+
+    #createUniforms() {
+        this.#u = {
+            noiseScale:     uniform(this.#params.noiseScale),
+            flowSpeed:      uniform(this.#params.flowSpeed),
+            curlAmp:        uniform(this.#params.curlAmp),
+            damping:        uniform(this.#params.damping),
+            particleSize:   uniform(this.#params.particleSize),
+            colorIntensity: uniform(this.#params.colorIntensity),
+            bounds:         uniform(this.#params.bounds),
+            // Respawn limit — sized to the camera frustum so particles can reach the
+            // cursor anywhere on screen. Spawn still uses the smaller `bounds` radius.
+            maxBounds:      uniform(this.#params.bounds),
+            timeScale:      uniform(this.#params.timeScale),
+            deltaTime:      uniform(0.016),
+            baseColor:      uniform(this.#currentColor.clone()),
+            // Pointer attractor: world position + 0..1 strength (ramped when hovering)
+            attractPull:      uniform(this.#params.attractPull),
+            attractorPos:     uniform(new THREE.Vector3(0, 0, 0)),
+            attractorStrength: uniform(0.0)
+        };
+    }
+
+    #buildParticleSystem() {
+        const count = this.#params.particleCount;
+
+        this.#positionBuffer = instancedArray(count, 'vec3');
+        this.#velocityBuffer = instancedArray(count, 'vec3');
+        // vec2: x = current lifetime, y = max lifetime
+        this.#lifeBuffer     = instancedArray(count, 'vec2');
+
+        // --- Curl noise via finite differences on three offset noise fields ---
+        const curlNoise = Fn(([p_input]) => {
+            const p = p_input.toVar();
+            const eps = float(0.35);
+
+            const offA = vec3(0.0, 0.0, 0.0);
+            const offB = vec3(41.7, 23.4, 55.9);
+            const offC = vec3(78.2, 66.1, 12.3);
+
+            const sampleN = (pos, off) => mx_noise_float(pos.add(off));
+
+            const dNc_dy = sampleN(p.add(vec3(0, eps, 0)), offC).sub(sampleN(p.sub(vec3(0, eps, 0)), offC));
+            const dNb_dz = sampleN(p.add(vec3(0, 0, eps)), offB).sub(sampleN(p.sub(vec3(0, 0, eps)), offB));
+            const dNa_dz = sampleN(p.add(vec3(0, 0, eps)), offA).sub(sampleN(p.sub(vec3(0, 0, eps)), offA));
+            const dNc_dx = sampleN(p.add(vec3(eps, 0, 0)), offC).sub(sampleN(p.sub(vec3(eps, 0, 0)), offC));
+            const dNb_dx = sampleN(p.add(vec3(eps, 0, 0)), offB).sub(sampleN(p.sub(vec3(eps, 0, 0)), offB));
+            const dNa_dy = sampleN(p.add(vec3(0, eps, 0)), offA).sub(sampleN(p.sub(vec3(0, eps, 0)), offA));
+
+            return vec3(
+                dNc_dy.sub(dNb_dz),
+                dNa_dz.sub(dNc_dx),
+                dNb_dx.sub(dNa_dy)
+            );
+        });
+
+        // Spawn helper: pseudo-random point in a sphere shell
+        const randomSpawn = Fn(([seed_in]) => {
+            const seed = seed_in.toVar();
+            const r1 = hash(seed.add(1.0));
+            const r2 = hash(seed.add(2.0));
+            const r3 = hash(seed.add(3.0));
+
+            const theta = r1.mul(6.28318);
+            const phi   = r2.mul(3.14159);
+            // Cube root distribution for uniform volumetric density
+            const radius = r3.pow(1.0 / 3.0).mul(this.#u.bounds).mul(0.9);
+
+            const sinPhi = phi.sin();
+            return vec3(
+                sinPhi.mul(theta.cos()).mul(radius),
+                phi.cos().mul(radius),
+                sinPhi.mul(theta.sin()).mul(radius)
+            );
+        });
+
+        // --- Init compute ---
+        this.#computeInit = Fn(() => {
+            const idx = instanceIndex.toFloat();
+            const pos = this.#positionBuffer.element(instanceIndex);
+            const vel = this.#velocityBuffer.element(instanceIndex);
+            const life = this.#lifeBuffer.element(instanceIndex);
+
+            pos.assign(randomSpawn(idx));
+            vel.assign(vec3(0.0));
+
+            const maxLife = hash(idx.add(7.0)).mul(4.0).add(2.0);
+            life.assign(vec2(hash(idx.add(9.0)).mul(maxLife), maxLife));
+        })().compute(count);
+
+        // --- Update compute ---
+        this.#computeUpdate = Fn(() => {
+            const idx = instanceIndex.toFloat();
+            const posSlot = this.#positionBuffer.element(instanceIndex);
+            const velSlot = this.#velocityBuffer.element(instanceIndex);
+            const lifeSlot = this.#lifeBuffer.element(instanceIndex);
+
+            // Local mutable copies — write-back at the end to avoid RAW hazards on storage buffers
+            const pos = posSlot.toVar();
+            const vel = velSlot.toVar();
+            const lifeX = lifeSlot.x.toVar();
+            const lifeY = lifeSlot.y.toVar();
+
+            const dt = this.#u.deltaTime;
+
+            // Sample curl noise at the particle's scaled position, animated by time
+            const samplePos = pos.mul(this.#u.noiseScale).add(time.mul(this.#u.timeScale));
+            const curlForce = curlNoise(samplePos).mul(this.#u.curlAmp);
+
+            // Pointer attraction: constant pull toward the cursor, gated by strength.
+            // Guarded division avoids NaN when a particle sits exactly on the attractor.
+            const toAttractor = this.#u.attractorPos.sub(pos);
+            const attractDir  = toAttractor.div(length(toAttractor).max(0.0001));
+            const attractForce = attractDir.mul(this.#u.attractPull).mul(this.#u.attractorStrength);
+
+            // Semi-implicit Euler: v += (curl*flowSpeed + attract)*dt; v *= damping; p += v*dt
+            vel.assign(
+                vel.add(curlForce.mul(this.#u.flowSpeed).add(attractForce).mul(dt)).mul(this.#u.damping)
+            );
+            pos.assign(pos.add(vel.mul(dt)));
+            lifeX.assign(lifeX.sub(dt));
+
+            // Respawn if it escapes the reachable frustum or its life expired.
+            // Spawning stays within the tighter `bounds`, so the idle cloud is centered.
+            const respawn = length(pos).greaterThan(this.#u.maxBounds).or(lifeX.lessThanEqual(0.0));
+            If(respawn, () => {
+                pos.assign(randomSpawn(idx.add(time.mul(31.7))));
+                vel.assign(vec3(0.0));
+                lifeX.assign(lifeY);
+            });
+
+            posSlot.assign(pos);
+            velSlot.assign(vel);
+            lifeSlot.assign(vec2(lifeX, lifeY));
+        })().compute(count);
+
+        // --- Render material ---
+        const material = new THREE.SpriteNodeMaterial({
+            transparent: true,
+            depthWrite:  false,
+            blending:    THREE.AdditiveBlending
+        });
+
+        material.positionNode = this.#positionBuffer.element(instanceIndex);
+        material.scaleNode    = this.#u.particleSize;
+
+        // Fade in/out over lifetime; hot core based on velocity magnitude
+        const lifeNode  = this.#lifeBuffer.element(instanceIndex);
+        const velNode   = this.#velocityBuffer.element(instanceIndex);
+        const lifeFrac  = lifeNode.x.div(lifeNode.y.add(0.0001)).saturate();
+        const fadeAlpha = smoothstep(0.0, 0.15, lifeFrac).mul(smoothstep(1.0, 0.7, lifeFrac));
+        const speed     = length(velNode).mul(0.4).saturate();
+
+        const hot  = color(0xffffff).mul(speed);
+        const tint = this.#u.baseColor.mul(this.#u.colorIntensity);
+        material.colorNode   = tint.add(hot);
+        material.opacityNode = fadeAlpha;
+
+        const geometry = new THREE.PlaneGeometry(1, 1);
+        this.#particleMesh = new THREE.InstancedMesh(geometry, material, count);
+        this.#particleMesh.frustumCulled = false;
+        this.#scene.add(this.#particleMesh);
+    }
+
+    #setupDebugUI() {
+        // Stats
+        this.#stats = new Stats();
+        this.#stats.dom.classList.add('systems-stats');
+        this.#stats.dom.style.cssText += 'position:fixed;top:8px;left:8px;z-index:100;opacity:0.7;';
+        document.body.appendChild(this.#stats.dom);
+
+        // GUI
+        this.#gui = new GUI({ title: 'Particle System', width: 260 });
+        this.#gui.domElement.classList.add('systems-gui');
+        this.#gui.domElement.style.cssText += 'position:fixed;top:8px;right:8px;z-index:100;';
+
+        const flow = this.#gui.addFolder('Flow');
+        flow.add(this.#params, 'noiseScale', 0.02, 1.2, 0.005).onChange(v => this.#u.noiseScale.value = v);
+        flow.add(this.#params, 'flowSpeed',  0.0,  3.0, 0.01) .onChange(v => this.#u.flowSpeed.value  = v);
+        flow.add(this.#params, 'curlAmp',    0.0,  6.0, 0.01) .onChange(v => this.#u.curlAmp.value    = v);
+        flow.add(this.#params, 'attractPull', 0.0, 80.0, 0.5).onChange(v => this.#u.attractPull.value = v);
+        flow.add(this.#params, 'damping',    0.80, 0.999, 0.001).onChange(v => this.#u.damping.value = v);
+        flow.add(this.#params, 'timeScale',  0.0,  1.0, 0.005).onChange(v => this.#u.timeScale.value = v);
+        flow.add(this.#params, 'bounds',     2.0,  20.0, 0.1) .onChange(v => this.#u.bounds.value    = v);
+
+        const look = this.#gui.addFolder('Appearance');
+        look.add(this.#params, 'particleSize',   0.005, 0.3, 0.001).onChange(v => this.#u.particleSize.value   = v);
+        look.add(this.#params, 'colorIntensity', 0.1,   6.0, 0.05) .onChange(v => this.#u.colorIntensity.value = v);
+
+        const setBloom = (prop, v) => {
+            const u = this.#bloomPass?.[prop];
+            if (u && 'value' in u) u.value = v;
+        };
+        const post = this.#gui.addFolder('Bloom');
+        post.add(this.#params, 'bloomStrength',  0.0, 6.0, 0.05).onChange(v => setBloom('strength',  v));
+        post.add(this.#params, 'bloomRadius',    0.0, 2.0, 0.01).onChange(v => setBloom('radius',    v));
+        post.add(this.#params, 'bloomThreshold', 0.0, 1.0, 0.01).onChange(v => setBloom('threshold', v));
+
+        this.#gui.add({ reset: () => this.#reseedParticles() }, 'reset').name('Respawn Particles');
+
+        this.#gui.close();
+
+        // Debug hidden by default; press "D" to toggle
+        this.#applyDebugVisibility();
+    }
+
+    #applyDebugVisibility() {
+        const vis = this.#params.showDebug ? 'block' : 'none';
+        if (this.#stats?.dom) this.#stats.dom.style.display = vis;
+        if (this.#gui?.domElement) this.#gui.domElement.style.display = vis;
+    }
+
+    #onKeyDown = (e) => {
+        if (e.key === 'd' || e.key === 'D') {
+            // Ignore when typing in inputs
+            const t = e.target;
+            if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+            this.#params.showDebug = !this.#params.showDebug;
+            this.#applyDebugVisibility();
+        }
+    };
+
+    // Pointer/touch attractor. The canvas is pointer-events:none, so we listen on
+    // window and read whatever DOM element is under the pointer to exclude the UI.
+    #setupPointer() {
+        // Don't attract while the pointer is over the nav or any open overlay UI.
+        const EXCLUDE = '.systems-nav, .sidebar-toggle, #systems-info-panel, .systems-gui, .systems-stats';
+        const overUI = (target) => !!(target && target.closest && target.closest(EXCLUDE));
+
+        const setFromPointer = (e) => {
+            if (overUI(e.target)) { this.#pointerActive = false; return; }
+            this.#pointerNDC.x = (e.clientX / window.innerWidth)  * 2 - 1;
+            this.#pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            this.#pointerActive = true;
+        };
+        const deactivate = () => { this.#pointerActive = false; };
+
+        // pointermove covers mouse hover and touch-drag; pointerdown catches the
+        // initial finger tap so a stationary touch still attracts.
+        window.addEventListener('pointermove', setFromPointer, { passive: true });
+        window.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'touch') setFromPointer(e);
+        }, { passive: true });
+        window.addEventListener('pointerup', (e) => {
+            if (e.pointerType === 'touch') deactivate();
+        }, { passive: true });
+        window.addEventListener('pointercancel', deactivate, { passive: true });
+        // Mouse leaving the document window ends the attraction.
+        document.addEventListener('pointerleave', deactivate, { passive: true });
+    }
+
+    async #reseedParticles() {
+        if (this.#computeInit && this.#renderer) {
+            await this.#renderer.computeAsync(this.#computeInit);
+        }
+    }
+
+    setColor(label) {
+        const c = SystemsVisual.#COLOR_MAP[label];
+        if (c) this.#targetColor.copy(c);
+    }
+
+    #onResize = () => {
+        this.#camera.aspect = window.innerWidth / window.innerHeight;
+        this.#camera.updateProjectionMatrix();
+        this.#renderer.setSize(window.innerWidth, window.innerHeight);
+        this.#updateReach();
+    };
+
+    // Size the respawn limit to the visible frustum at the z=0 plane (where the
+    // attractor lives), so a cursor in any corner is still reachable. Widescreen
+    // desktops get a large radius; portrait mobile stays close to `bounds`.
+    #updateReach() {
+        const distToPlane = Math.abs(this.#camera.position.z);
+        const halfH = Math.tan((this.#camera.fov * Math.PI / 180) / 2) * distToPlane;
+        const halfW = halfH * this.#camera.aspect;
+        // Reach the screen corners, plus margin so particles can pool at the cursor
+        // instead of respawning the instant they arrive.
+        const reach = Math.hypot(halfW, halfH) * 1.25;
+        this.#u.maxBounds.value = Math.max(reach, this.#params.bounds);
+    }
+
+    #updateFrame(dt) {
+        this.#stats?.begin();
+
+        // Interpolate section color CPU-side, then push into uniform
+        this.#currentColor.lerp(this.#targetColor, 0.03);
+        this.#u.baseColor.value.copy(this.#currentColor);
+        this.#u.deltaTime.value = dt;
+
+        // Unproject the pointer onto the z=0 plane so particles chase it in-scene,
+        // then ramp attraction strength in/out for a smooth engage/release.
+        if (this.#pointerActive) {
+            this.#raycaster.setFromCamera(this.#pointerNDC, this.#camera);
+            if (this.#raycaster.ray.intersectPlane(this.#attractorPlane, this.#attractorWorld)) {
+                this.#u.attractorPos.value.copy(this.#attractorWorld);
+            }
+        }
+        const targetStrength = this.#pointerActive ? 1.0 : 0.0;
+        const cur = this.#u.attractorStrength.value;
+        this.#u.attractorStrength.value = cur + (targetStrength - cur) * Math.min(1, dt * 6);
+
+        this.#renderer.computeAsync(this.#computeUpdate);
+        this.#postProc.renderAsync();
+
+        this.#stats?.end();
+    }
+}
+
+// --- Bootstrap ---
+const carouselInfo = [];
+carouselInfo[cryptoVisual.id] = cryptoVisual;
+carouselInfo[digitalTwin.id]  = digitalTwin;
+carouselInfo[streamSystem.id] = streamSystem;
+window.carouselInfo = carouselInfo;
+
+const visual = new SystemsVisual();
+window.systemsVisual = visual;
+
+// The panel element must exist in HTML before this script runs (it does — it's static)
+// Load both in parallel — neither depends on the other
+await visual.init();
+
+const manager = new SystemManager(null, carouselInfo);
+window.manager = manager;
+await manager.init();
+
+// Sidebar toggle — module runs after DOM is parsed, no need for DOMContentLoaded
+const toggleBtn = document.getElementById('systems-sidebar-toggle');
+const systemsNav = document.getElementById('systems-navigation');
+if (toggleBtn) {
+    const syncSystemsNavState = () => {
+        const collapsed = document.body.classList.contains('systems-nav-collapsed');
+        toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+        toggleBtn.setAttribute('aria-label', collapsed ? 'Show systems menu' : 'Hide systems menu');
+        if (systemsNav) systemsNav.inert = collapsed;
+    };
+
+    toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('systems-nav-collapsed');
+        syncSystemsNavState();
     });
-})();
 
-
-// === Custom overlay content mapping for systems ===
-// Inject CRYPTOVISUAL (index 1) content from systems/CRYPTOVISUAL.html lines 54–97.
-window.carouselInfo = window.carouselInfo || [];
-window.carouselInfo[1] = {
-  html: `
-               <div class = "sPageTitle">CRYPTOVISUAL .SYSTEM</div>
-               <div class = "description">Real-Time Global Cryptocurrency Chart</div>
-               <div class = "iframe-container">
-                    <div><iframe src="https://player.vimeo.com/video/754129193?h=353138da28?&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="CryptoVisual-System-Video"></iframe></div>
-               </div>
-               <div class = "blogText">
-                    <div class = "span">> System Information: </div>
-               </div>
-              <div class="infosection">
-                   <div class = "subdescription">The CryptoChart.SYSTEM is a real-time data visualization system that displays the USD pricing, market percentage, and OHLC data for the top ten most dominating cryptocurrencies in the market, updating in real-time.</div>
-                    <div class = "boxA">
-                         <div class = 'images'> <img src="/img/cryptograph.png" class="responsiveSystem"></div>
-                    </div>
-                  <div class = "subdescription">CryptoChart displays coins ranked in order from 1 to 10, starting from the current crypto coin with the highest overall global dominance; with data being fetched using <a href="https://www.coingecko.com/">coingecko.com's</a> API and WebSockets.</div>
-                    <div class = "iframe-container">
-                      <div><iframe src="https://player.vimeo.com/video/1072648117?h=353138da28&badge=0&autopause=0&player_id=0&app_id=584791"
-                                   allow="autoplay; fullscreen; picture-in-picture"
-                                   allowfullscreen
-                                   style="border: white 1px solid"
-                                   title="CryptoVisual-System-Video"></iframe>
-                      </div>
-                    </div>
-                    <div class = "boxC">
-                      <script type="module" src="/js/coin.js"></script>
-                    </div>
-                    <div class = "subdescription">The main CryptoChart display window is also able to display a 24 hour and 7 - day OHLC bar chart, with red and green colors across the UI indicating a loss or gain. The prices displayed in the outer window are also able to change the current USD coin value to instead display 1-hour OHLC market data.</div>
-                    <div class = "boxB">
-                        <div class = 'images'> <img src="/img/crypto.png" class="responsiveSystem"></div>
-                    </div>
-                  <div class = "subdescription">Along with being able to run in real-time at 60 frames per second; this system also uploads its chart and statistics on X (also known as Twitter) daily at: <a href = "https://x.com/dn_cryptochart"> https://x.com/dn_cryptochart </a></div>
-                  <div class = "iframe-container">
-                      <div><iframe src="https://player.vimeo.com/video/1072029509?h=353138da28&badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&loop=1"
-                                   allow="autoplay; fullscreen; picture-in-picture"
-                                   allowfullscreen
-                                   style="pointer-events: none; border: white 1px solid"
-                                   title="CryptoVisual-System-Video"></iframe>
-                      </div>
-                  </div>
-                  <div class = "techdescription">Technologies: TouchDesigner </div>
-               </div>
-  `
-};
-
-
-// Inject DIGITAL_TWIN (index 0) content from systems/DIGITAL_TWIN.html lines 56–194.
-window.carouselInfo = window.carouselInfo || [];
-window.carouselInfo[0] = {
-  html: `
-               <div class = "sPageTitle">xArm.SYSTEM</div>
-               <div class = "description">Real-Time Robotic Arm Digital Twin System </div>
-               <div class = "iframe-container">
-                  <div><iframe src="https://player.vimeo.com/video/1053833143?h=353138da28?&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="REEL.MOV"></iframe></div>
-               </div>
-               <div class = "blogText">
-                  <div class = "span">> System Information: </div>
-               </div>
-               <div class="infosection">
-                  <div class = "subdescription">The xArm.SYSTEM is a Real-Time Robotic Arm Digital Twin System that mirrors the movement of the xArm robotic arm within a simulated 3D environment, allowing for immediate, accurate feedback of the xArm in real-time, and the ability to change operation settings on the fly.  </div>
-                  <div class = "iframe-container">
-                       <div><iframe src="https://player.vimeo.com/video/1095999657?h=353138da28?&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" style=" border: white 1px solid;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" title="REEL.MOV"></iframe></div>
-                  </div>
-                  <div class = "subdescription">To the right of the interface is the 3D environment of the Digital Twin itself, running in real-time while displaying the claw’s current position and the claw's path as it moves from position to position, updating continuously to reflect the synchronization between the physical xArm Robotic Arm itself and the Digital Twin render.</div>
-                  <div class = "boxB">
-                       <div class = 'images'> <img src="/img/dtUI.jpg" class="responsiveSystem"></div>
-                  </div>
-                  <div class = "subdescription">To the left of the interface are all of the available controls for the system and data available for viewing, such as serial messages being sent for current status and current CPU usage of the system. User is able to control 5 servos controlling the xArm, configure speed settings of the arm, and add or remove the visual pathing of the digital twin.</div>
-                  <div class = "iframe-container">
-                       <div><iframe src="https://player.vimeo.com/video/1072607533?h=353138da28&badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&loop=1"
-                                    allow="autoplay; fullscreen; picture-in-picture"
-                                    allowfullscreen
-                                    style="pointer-events: none; border: white 1px solid;"
-                                    title="CryptoVisual-System-Video"></iframe>
-                       </div>
-                  </div>
-                  <div class = "subdescription">xArm.System has two modes: Manual and Auto. Manual works as described earlier; using the UI sliders to manually adjust the bot itself. Auto mode automatically detects the color block of the user's choice, and using Open CV the camera detects the position of the colored object itself, then sending the correct position of the object to the the 5 servos; and activating the claw to open open and grab object.</div>
-                  <div class = "subdescription">The follow Python script is the main driver for Auto mode:</div>
-                  <div class="codeContainer">
-                       <pre class="shiki vitesse-dark" style="background-color:#121212;color:#dbd7caee" tabindex="0"><code><span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">import cv2 as cv</span></span>
-<span class="line"><span style="color:#DBD7CAEE">import numpy as np</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE"># Constants</span></span>
-<span class="line"><span style="color:#DBD7CAEE">width </span><span style="color:#666666">=</span><span style="color:#4C9A91"> 10</span><span style="color:#DBD7CAEE">  # Real width of the object in cm</span></span>
-<span class="line"><span style="color:#DBD7CAEE">focal </span><span style="color:#666666">=</span><span style="color:#4C9A91"> 450</span><span style="color:#DBD7CAEE">  # Focal length of the camera</span></span>
-<span class="line"><span style="color:#DBD7CAEE">kernel </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">getStructuringElement</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">cv.MORPH_ELLIPSE</span><span style="color:#666666">,</span><span style="color:#666666"> (</span><span style="color:#4C9A91">5</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 5</span><span style="color:#666666">))</span></span>
-<span class="line"><span style="color:#DBD7CAEE">dist </span><span style="color:#666666">=</span><span style="color:#4C9A91"> 0</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE"># Define colors</span></span>
-<span class="line"><span style="color:#DBD7CAEE">blue   </span><span style="color:#666666">=</span><span style="color:#666666"> (</span><span style="color:#4C9A91">255</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 0</span><span style="color:#666666">,</span><span style="color:#4C9A91">   0</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">green  </span><span style="color:#666666">=</span><span style="color:#666666"> (</span><span style="color:#4C9A91">0</span><span style="color:#666666">,</span><span style="color:#4C9A91">   255</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 0</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">red    </span><span style="color:#666666">=</span><span style="color:#666666"> (</span><span style="color:#4C9A91">0</span><span style="color:#666666">,</span><span style="color:#4C9A91">   0</span><span style="color:#666666">,</span><span style="color:#4C9A91">   255</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">yellow </span><span style="color:#666666">=</span><span style="color:#666666"> (</span><span style="color:#4C9A91">0</span><span style="color:#666666">,</span><span style="color:#4C9A91">   255</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 255</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">purple </span><span style="color:#666666">=</span><span style="color:#666666"> (</span><span style="color:#4C9A91">255</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 0</span><span style="color:#666666">,</span><span style="color:#4C9A91">   255</span><span style="color:#666666">)</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">color_map </span><span style="color:#666666">=</span><span style="color:#666666"> {</span></span>
-<span class="line"><span style="color:#C98A7D77">    '</span><span style="color:#C98A7D">RED</span><span style="color:#C98A7D77'>"</span><span style="color:#DBD7CAEE">: red</span><span style="color:#666666">,</span></span>
-<span class="line"><span style="color:#C98A7D77">    '</span><span style="color:#C98A7D">BLUE</span><span style="color:#C98A7D77">'</span><span style="color:#DBD7CAEE">: blue</span><span style="color:#666666">,</span></span>
-<span class="line"><span style="color:#C98A7D77">    '</span><span style="color:#C98A7D">GREEN</span><span style="color:#C98A7D77">'</span><span style="color:#DBD7CAEE">: green</span><span style="color:#666666">,</span></span>
-<span class="line"><span style="color:#C98A7D77">    '</span><span style="color:#C98A7D">YELLOW</span><span style="color:#C98A7D77">'</span><span style="color:#DBD7CAEE">: yellow</span><span style="color:#666666">,</span></span>
-<span class="line"><span style="color:#C98A7D77">    '</span><span style="color:#C98A7D">PURPLE</span><span style="color:#C98A7D77">'</span><span style="color:#DBD7CAEE">: purple</span></span>
-<span class="line"><span style="color:#666666">}</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE"># Set the color you want to detect</span></span>
-<span class="line"><span style="color:#DBD7CAEE">selected_color </span><span style="color:#666666">=</span><span style="color:#80A665"> str</span><span style="color:#666666">(</span><span style="color:#80A665">op</span><span style="color:#666666">(</span><span style="color:#C98A7D77">'</span><span style="color:#C98A7D">colorName</span><span style="color:#C98A7D77">'</span><span style="color:#666666">)[</span><span style="color:#4C9A91">0</span><span style="color:#666666">,</span><span style="color:#4C9A91">0</span><span style="color:#666666">])</span><span style="color:#DBD7CAEE">.</span><span style="color:#80A665">upper</span><span style="color:#666666">()</span></span>
-<span class="line"><span style="color:#DBD7CAEE">x </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> color_map.</span><span style="color:#80A665">get</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">selected_color</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> red</span><span style="color:#666666">)</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE"># Precompute HSV ranges once at startup</span></span>
-<span class="line"><span style="color:#DBD7CAEE">HSV_RANGES </span><span style="color:#666666">=</span><span style="color:#666666"> {}</span></span>
-<span class="line"><span style="color:#4D9375">for</span><span style="color:#DBD7CAEE"> name</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> bgr in color_map.</span><span style="color:#80A665">items</span><span style="color:#666666">()</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    hsv </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">cvtColor</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">np.</span><span style="color:#80A665">uint8</span><span style="color:#666666">([[</span><span style="color:#DBD7CAEE">bgr</span><span style="color:#666666">]]),</span><span style="color:#DBD7CAEE"> cv.COLOR_BGR2HSV</span><span style="color:#666666">)[</span><span style="color:#4C9A91">0</span><span style="color:#666666">][</span><span style="color:#4C9A91">0</span><span style="color:#666666">]</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    h </span><span style="color:#666666">=</span><span style="color:#CB7676"> int</span><span style="color:#666666">(</span><span style="color:#BD976A">hsv</span><span style="color:#666666">[</span><span style="color:#4C9A91">0</span><span style="color:#666666">])</span></span>
-<span class="line"><span style="color:#4D9375">    if</span><span style="color:#DBD7CAEE"> name </span><span style="color:#CB7676">==</span><span style="color:#C98A7D77"> '</span><span style="color:#C98A7D">RED</span><span style="color:#C98A7D77">'</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#DBD7CAEE">        lowerLimit </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> np.</span><span style="color:#80A665">array</span><span style="color:#666666">([</span><span style="color:#4C9A91">150</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 140</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 140</span><span style="color:#666666">],</span><span style="color:#DBD7CAEE"> dtype</span><span style="color:#666666">=</span><span style="color:#DBD7CAEE">np.uint8</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">        upperLimit </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> np.</span><span style="color:#80A665">array</span><span style="color:#666666">([</span><span style="color:#4C9A91">179</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 210</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 210</span><span style="color:#666666">],</span><span style="color:#DBD7CAEE"> dtype</span><span style="color:#666666">=</span><span style="color:#DBD7CAEE">np.uint8</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">    else</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#DBD7CAEE">        lowerLimit </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> np.</span><span style="color:#80A665">array</span><span style="color:#666666">([</span><span style="color:#80A665">max</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">h </span><span style="color:#CB7676">-</span><span style="color:#4C9A91"> 30</span><span style="color:#666666">,</span><span style="color:#4C9A91">0</span><span style="color:#666666">),</span><span style="color:#4C9A91"> 50</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 50</span><span style="color:#666666">],</span><span style="color:#DBD7CAEE"> dtype</span><span style="color:#666666">=</span><span style="color:#DBD7CAEE">np.uint8</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">        upperLimit </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> np.</span><span style="color:#80A665">array</span><span style="color:#666666">([</span><span style="color:#80A665">min</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">h </span><span style="color:#CB7676">+</span><span style="color:#4C9A91"> 30</span><span style="color:#666666">,</span><span style="color:#4C9A91">179</span><span style="color:#666666">),</span><span style="color:#4C9A91"> 255</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 255</span><span style="color:#666666">],</span><span style="color:#DBD7CAEE"> dtype</span><span style="color:#666666">=</span><span style="color:#DBD7CAEE">np.uint8</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#BD976A">    HSV_RANGES</span><span style="color:#666666">[</span><span style="color:#DBD7CAEE">name</span><span style="color:#666666">]</span><span style="color:#666666"> =</span><span style="color:#666666"> (</span><span style="color:#DBD7CAEE">lowerLimit</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> upperLimit</span><span style="color:#666666">)</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">def </span><span style="color:#80A665">get_dist</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">rect</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> image</span><span style="color:#666666">)</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    pixels </span><span style="color:#666666">=</span><span style="color:#BD976A"> rect</span><span style="color:#666666">[</span><span style="color:#4C9A91">1</span><span style="color:#666666">][</span><span style="color:#4C9A91">0</span><span style="color:#666666">]</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    dist </span><span style="color:#666666">=</span><span style="color:#666666"> (</span><span style="color:#DBD7CAEE">width </span><span style="color:#CB7676">*</span><span style="color:#DBD7CAEE"> focal</span><span style="color:#666666">)</span><span style="color:#CB7676"> /</span><span style="color:#DBD7CAEE"> pixels  </span></span>
-<span class="line"><span style="color:#DBD7CAEE">    table </span><span style="color:#666666">=</span><span style="color:#80A665"> op</span><span style="color:#666666">(</span><span style="color:#C98A7D77">'</span><span style="color:#C98A7D">cv_table</span><span style="color:#C98A7D77">'</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#BD976A">    table</span><span style="color:#666666">[</span><span style="color:#4C9A91">0</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 0</span><span style="color:#666666">]</span><span style="color:#666666"> =</span><span style="color:#80A665"> str</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">dist</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">    return</span><span style="color:#DBD7CAEE"> image</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">#Detect Colors</span></span>
-<span class="line"><span style="color:#DBD7CAEE">def </span><span style="color:#80A665">get_limits</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">color</span><span style="color:#666666">)</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#4D9375">    return</span><span style="color:#DBD7CAEE"> HSV_RANGES.</span><span style="color:#80A665">get</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">selected_color</span><span style="color:#666666">,</span><span style="color:#666666"> (</span><span style="color:#DBD7CAEE">np.</span><span style="color:#80A665">array</span><span style="color:#666666">([</span><span style="color:#4C9A91">0</span><span style="color:#666666">,</span><span style="color:#4C9A91">0</span><span style="color:#666666">,</span><span style="color:#4C9A91">0</span><span style="color:#666666">]),</span><span style="color:#DBD7CAEE"> np.</span><span style="color:#80A665">array</span><span style="color:#666666">([</span><span style="color:#4C9A91">179</span><span style="color:#666666">,</span><span style="color:#4C9A91">255</span><span style="color:#666666">,</span><span style="color:#4C9A91">255</span><span style="color:#666666">])))</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">#Used to update servo positions in Touchdesigner</span></span>
-<span class="line"><span style="color:#DBD7CAEE">def </span><span style="color:#80A665">update_constant_chops</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">dist</span><span style="color:#666666">)</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    constant_chop </span><span style="color:#666666">=</span><span style="color:#80A665"> op</span><span style="color:#666666">(</span><span style="color:#C98A7D77">'</span><span style="color:#C98A7D">fillValues</span><span style="color:#C98A7D77">'</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    constant_chop.par.value0 </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> dist</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">def </span><span style="color:#80A665">onCook</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">scriptOp</span><span style="color:#666666">)</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#80A665">    debug</span><span style="color:#666666">(</span><span style="color:#C98A7D77">'</span><span style="color:#C98A7D">onCook called</span><span style="color:#C98A7D77">'</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    top </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> scriptOp.</span><span style="color:#BD976A">inputs</span><span style="color:#666666">[</span><span style="color:#4C9A91">0</span><span style="color:#666666">]</span><span style="color:#DBD7CAEE">  # This means the script is reading frame from the input of this operator</span><span style="color:#666666">;</span><span style="color:#DBD7CAEE"> in most cases our webcams.</span></span>
-<span class="line"><span style="color:#4D9375">    if</span><span style="color:#DBD7CAEE"> top is None:</span></span>
-<span class="line"><span style="color:#80A665">        debug</span><span style="color:#666666">(</span><span style="color:#C98A7D77">'</span><span style="color:#C98A7D">Error: Could not find input</span><span style="color:#C98A7D77">'</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">        return</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">    img </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> top.</span><span style="color:#80A665">numpyArray</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">delayed</span><span style="color:#666666">=</span><span style="color:#DBD7CAEE">True</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">    if</span><span style="color:#DBD7CAEE"> img is None:</span></span>
-<span class="line"><span style="color:#80A665">        debug</span><span style="color:#666666">(</span><span style="color:#C98A7D77">'</span><span style="color:#C98A7D">Error: No frame data available</span><span style="color:#C98A7D77">'</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">        return</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#80A665">    debug</span><span style="color:#666666">(</span><span style="color:#C98A7D77">'</span><span style="color:#C98A7D">Img received</span><span style="color:#C98A7D77">'</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    hsvImg </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">cvtColor</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">img</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> cv.COLOR_BGR2HSV</span><span s tyle="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    lowerLimit</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> upperLimit </span><span style="color:#666666">=</span><span style="color:#80A665"> get_limits</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">x</span><span style="color:#666666">)</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#80A665">    debug</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">f</span><span style="color:#C98A7D77">"</span><span style="color:#C98A7D">Thresholds → low: {lowerLimit}, high: {upperLimit}</span><span style="color:#C98A7D77">"</span><span style="color:#666666">)</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">    mask </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">inRange</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">hsvImg</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> lowerLimit</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> upperLimit</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">    img2 </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">morphologyEx</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">mask</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> cv.MORPH_OPEN</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> kernel</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> iterations</span><span style="color:#666666">=</span><span style="color:#4C9A91">2</span><span style="color:#666666">)</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">    contours</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> _ </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">findContours</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">img2</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> cv.RETR_EXTERNAL</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> cv.CHAIN_APPROX_SIMPLE</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">    if</span><span style="color:#DBD7CAEE"> contours:</span></span>
-<span class="line"><span style="color:#DBD7CAEE">        cnt </span><span style="color:#666666">=</span><span style="color:#80A665"> max</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">contours</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> key</span><span style="color:#666666">=</span><span style="color:#DBD7CAEE">cv.contourArea</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">        area </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">contourArea</span><span style="color:#666666">(</span><span style=                                                                                                                                                                                                                                                   ="color:#DBD7CAEE">cnt</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">        if</span><span style="color:#4C9A91"> 100</span><span style="color:#CB7676"> &#x3C;</span><span style="color:#DBD7CAEE"> area </span><span style="color:#CB7676">&#x3C;</span><span style="color:#4C9A91"> 306000</span><span style="color:#DBD7CAEE">:</span></span>
-<span class="line"><span style="color:#DBD7CAEE">            rect </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> cv.</span><span style="color:#80A665">minAreaRect</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">cnt</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">            box </span><span style="color:#666666">=</span><span style="color:#DBD7CAEE"> np.</span><span style="color:#80A665">intp</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">cv.</span><span style="color:#80A665">boxPoints</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">rect</span><span style="color:#666666">))</span></span>
-<span class="line"><span style="color:#DBD7CAEE">            cv.</span><span style="color:#80A665">drawContours</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">img</span><span style="color:#666666">,</span><span style="color:#666666"> [</span><span style="color:#DBD7CAEE">box</span><span style="color:#666666">],</span><span style="color:#CB7676"> -</span><span style="color:#4C9A91">1</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> x</span><span style="color:#666666">,</span><span style="color:#4C9A91"> 3</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#DBD7CAEE">            img </span><span style="color:#666666">=</span><span style="color:#80A665"> get_dist</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">rect</span><span style="color:#666666">,</span><span style="color:#DBD7CAEE"> img</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#80A665">            update_constant_chops</span><span style="color:#666666">((</span><span style="color:#DBD7CAEE">width </span><span style="color:#CB7676">*</span><span style="color:#DBD7CAEE"> focal</span><span style="color:#666666">)</span><span style="color:#CB7676"> /</span><span style="color:#BD976A"> rect</span><span style="color:#666666">[</span><span style="color:#4C9A91">1</span><span style="color:#666666">][</span><span style="color:#4C9A91">0</span><span style="color:#666666">])</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#DBD7CAEE">    scriptOp.</span><span style="color:#80A665">copyNumpyArray</span><span style="color:#666666">(</span><span style="color:#DBD7CAEE">img</span><span style="color:#666666">)</span></span>
-<span class="line"><span style="color:#4D9375">    return</span></span>
-<span class="line"></span>
-<span class="line"></span></code></pre>
-                  </div>
-                   <p></p>
-                  <div class = "iframe-container">
-                       <div><iframe src="https://player.vimeo.com/video/1096319813?h=353138da28&badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1&loop=1"
-                                    allow="autoplay; fullscreen; picture-in-picture"
-                                    allowfullscreen
-                                    style="pointer-events: none; border: white 1px solid;"
-                                    title="CryptoVisual-System-Video"></iframe>
-                       </div>
-                  </div>
-                  <div class = "subdescription">This system is driven by Touchdesigner, which in turn is sending serial messages to a modified Arduino Uno to then control xArm's servos and claw.</div>
-                  <div class = "boxA">
-                       <div class = 'images'> <img src="/img/xarm-png.png" class="responsiveSystem"></div>
-                  </div>
-                  <div class = "techdescription">Technologies: TouchDesigner | Hiwonder xArm | Arduino   </div>
-               </div>
-  `
-};
-
-// Inject T_STREAM (index 2) content from systems/T_STREAM.html lines 56–112.
-window.carouselInfo[2] = {
-  html: `
-               <div class = "sPageTitle">T_STREAM SYSTEM</div>
-               <div class = "description"> Dual Twitch Streaming & Tourney Layout System</div>
-               <div class = "iframe-container">
-                    <div class = "twitch-video"><iframe src="https://player.twitch.tv/?collection=9t9EG_SbzxYqFg&video=1589470132&parent=DIGITIZEDNOISE.com" frameborder="0" allowfullscreen="true" scrolling="no" height="720" width="1280"></iframe></div>
-               </div>
-               <div class = "blogText">
-                    <div class = "span">> System Information: </div>
-               </div>
-               <div class="infosection">
-                    <div class = 'subdescription'>
-                         Stream.System is a live virtual production streaming system built with Touchdesigner that displays video feeds,
-                         displays, user controller inputs, various special FX and transitions; and Twitch data all in real-time. The entire system has been optimized with the intent of
-                         running at a 60FPS for offline and online broadcast purpose.
-                         It's main purpose initially was to properly display a player's controller inputs when playing their video game of choice; for this purpose
-                         I chose Fighting Games, since I feel that is the genre that can really benefit from displaying controller inputs in real-time.
-                         <br>
-                    </div>
-                    <div class="boxA">
-                         <div class = 'images'> <img src="/img/streaming.jpg" class="responsiveSystem"></div>
-                         <div class = 'copyright'>GUILTY GEAR: STRIVE © Arc System Works</div>
-                    </div>
-                    <div class = "subdescription">
-                         The Default mode is the default and original mode; this was the first iteration of the system.
-                         The bottom part of the screen is taken up by the camera input of the user, their current controller's display,
-                         and a second - screen which displays Twitch - Chat. It has since then been updated with the ability for Multiple Camera Filter FX .
-                         Reactions to appear inside the Chat Box screen by listening for Twitch GET / POST Requests.
-                         <br>
-                    </div>
-                    <div class="boxA">
-                         <div class = 'images'> <img src="/img/streaming.jpg" class="responsiveSystem"></div>
-                         <div class = 'copyright'>GUILTY GEAR: STRIVE © Arc System Works</div>
-                    </div>
-                    <div class="subdescription">
-                         In it's Modular mode, the main feed takes up the entire screen space and instead the camera, controller, and second-screen displays  are placed in dynamic windows; with the user free to move, remove, insert, and scale Windows around the screen; giving the user much more flexibility as to what they would like displayed on the main screen.
-                         <br>
-                    </div>
-                    <div class="boxB">
-                         <div class = 'images'> <img src="/gif/tourney.gif" class="responsiveSystem"></div>
-                         <div class = 'copyright'>TEKKEN 7 © Bandai-Namco</div>
-                    </div>
-                    <div class="subdescription">
-                         Player Two display two camera feeds and two controllers inputs within the same screen space at a fixed position; featuring a score system to keep track of current player scores with various Twitch FX able to appear throughout different areas of the screen. This particular mode is Esports friendly, with players being able to plug and play their preferred controller to compete with. A player is able to join camera and audio feed online over RTSP, however controller inputs cannot be displayed for the other player.
-                    </div>
-                    <div class = "iframe-container">
-                         <div class = "twitch-video"><iframe src="https://player.twitch.tv/?channel=digitizednoise&parent=digitizednoise.com" frameborder="0" allowfullscreen="true" scrolling="no" height="720" width="1280"></iframe></div>
-                    </div>
-                    <div class = "iframe-container">
-                         <div class = "twitch-video"><iframe src="https://www.twitch.tv/embed/digitizednoise/chat?parent=digitizednoise.com" frameborder="0" allowfullscreen="true" scrolling="no" height="720" width="1280"></iframe></div>
-                    </div>
-                    <div class="boxB">
-                         <div class = 'images'> <img src="/gif/tourney.gif" class="responsiveSystem"></div>
-                         <div class = 'copyright'>TEKKEN 7 © Bandai-Namco</div>
-                    </div>
-                    <div class = "techdescription">Technologies: TouchDesigner | OBS  </div>
-               </div>
-  `
-};
+    syncSystemsNavState();
+}

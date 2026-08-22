@@ -1,0 +1,339 @@
+@use "../abstracts" as *;
+
+/* ******************* About ******************* */
+
+.aboutWrapper {
+  display: grid;
+  margin: auto;
+  overflow: hidden;
+  min-height: 100dvh;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  //background-color: green;
+
+
+}
+
+.aboutBox {
+  display: grid;
+  align-content: center;
+  justify-content: start;
+  margin-inline: 0 auto;
+  padding-block: clamp(95px, 0vh, 60px);
+  padding-inline: clamp(35px, 4vw, 20px);
+  max-width: 755px;
+  z-index: 10;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 755px) {
+    /* Align to left on mobile */
+    justify-content: start;
+    padding-block-end: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+
+}
+
+.about{
+
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background-color: rgba(.5,.5,.5,.0);
+  max-height: 100vh;
+
+}
+
+.bioContent {
+  display: contents;
+}
+
+.bioText {
+  order: 1;
+  width: 100%;
+  padding-top: 5px;
+}
+
+.maintainedText {
+  order: 2;
+  width: 100%;
+}
+
+.email-link {
+  color: white;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: background-color 0.3s ease, color 0.3s ease, text-decoration-color 0.3s ease;
+
+  &:hover, &:focus {
+    background-color: white;
+    color: black;
+    text-decoration-color: transparent;
+    outline: none;
+  }
+}
+
+.about p {
+  font-family: $main-font;
+  font-size: $aboutSize;
+  line-height: 1.26;
+  text-align: left;
+}
+
+//Clients-Section
+
+.clients {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  order: 3;
+  padding-top: 6vh;
+
+}
+.clients-caret {
+  position: absolute;
+  top: 0;
+  left: -13px;
+  font-family: $bit-font;
+  font-size: calc(#{$clientsSize} * 1.7);
+  color: $darkLight;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  line-height: 1;
+  animation: clients-caret-left-right 3s ease-in-out infinite;
+}
+
+.clients-caret.visible {
+  opacity: 1;
+}
+
+.deprecated-text {
+  color: red;
+  font-family: $bit-font;
+}
+
+.x-link-container {
+  position: relative;
+  display: inline-block;
+
+  a {
+    color: white !important;
+    text-decoration: none;
+    font-size: $linkSize !important;
+    font-family: $code-font;
+    display: block;
+    width: fit-content;
+    padding: 2px 4px;
+
+
+    &:hover {
+      background-color: blue;
+    }
+  }
+}
+
+.x-link-caret {
+  position: absolute;
+  left: -18px;
+  top: 0;
+  font-family: $bit-font;
+  font-size: 1.4em;
+  color: white;
+  pointer-events: none;
+  opacity: 0;
+  line-height: 1;
+  animation: clients-caret-left-right 3s ease-in-out infinite;
+
+  &.visible {
+    opacity: 1;
+  }
+}
+
+.clients p{
+  line-height: 1.2;
+  font-family: $code-font;
+  font-size: $clientsSize;
+  text-align: left;
+  margin: 0;
+}
+
+.clients p + p {
+  margin-top: 1.2em;
+}
+
+.clients p a {
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+  display: block;
+  width: fit-content;
+  padding: 0.15em 0.2em;
+  border-radius: 2px;
+  position: relative;
+}
+
+.clients p a::before {
+  content: none;
+
+}
+
+@keyframes clients-caret-left-right {
+  0%   { margin-left: 0; }
+  50%  { margin-left: 10px; }
+  100% { margin-left: 0; }
+}
+
+/* Desktop/laptop: real hover */
+@media (hover: hover) and (pointer: fine) {
+  .clients p a:hover {
+    background-color: blue;
+  }
+}
+
+/* Mobile/tablet: tap/focus feedback */
+@media (hover: none) and (pointer: coarse) {
+  .clients p a:active,
+  .clients p a:focus {
+    background-color: blue;
+  }
+}
+
+/* Keyboard accessibility */
+.clients p a:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 4px;
+  background-color: blue;
+}
+
+// Terminal Cursor
+
+.terminal-cursor {
+  display: inline-block;
+  width: 0.4em;
+  height: 0.9em;
+  margin-left: 0.3em;
+  background: white;
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.85), 0 0 14px rgba(255,255, 255, 0.35);
+  vertical-align: -0.15em;
+  animation: cursor-blink 1.05s steps(1, end) infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes sys-light-blink {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-cursor,
+  .clients-caret,
+  .fadeWrapper,
+  .downloadLink,
+  .downloadLink::before,
+  .downloadLink::after {
+    animation: none !important;
+  }
+}
+
+.with-cursor::after {
+  content: '';
+  @extend .terminal-cursor;
+}
+
+// Systems uses static project labels and controls, so it should not inherit
+// the shared terminal-caret decoration used on other pages.
+.systems-page .with-cursor::after {
+  content: none;
+  display: none;
+}
+
+// Clients End
+
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1000px) {
+
+  /* Landscape */
+
+  .aboutWrapper {
+    display: grid;
+    align-content: center;
+    justify-content: center;
+    overflow: auto;
+    min-height: 100dvh;
+    width: 100%;
+  }
+
+  .aboutBox {
+    display: grid;
+    padding-block: clamp(75px, 0vh, 60px);
+    align-content: center;
+    margin-inline: 0 auto;
+    justify-content: center;
+    max-width: none;
+    width: 100%;
+  }
+
+  .about {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-content: center;
+    gap: 6vw;
+    max-height: none;
+    padding-left: 15px;
+    padding-right: 15px;
+    text-align: left;
+    width: 100%;
+  }
+
+  .bioContent {
+    display: block;
+    grid-column: 1;
+  }
+
+  .clients {
+    display: block;
+    grid-column: 2;
+    padding-top: 0;
+    align-self: center;
+    transform: translateY(-1.5em);
+  }
+
+  .bioContent p {
+    font-size: clamp(0.35rem, calc(0.4rem + 2vmin), 2.5rem);
+    line-height: 1.15;
+    padding-bottom: 0;
+    text-align: left;
+  }
+
+  .clients p {
+    font-size: clamp(0.20rem, calc(0.22rem + 2vmin), 2.5rem);
+    line-height: 1.15;
+    padding-bottom: 0;
+    text-align: left;
+  }
+
+  .clients-caret {
+    font-size: 0.8em;
+  }
+
+
+}
+
+/* ******************* About End ******************* */
+

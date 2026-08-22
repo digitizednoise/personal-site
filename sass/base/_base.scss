@@ -1,0 +1,106 @@
+@use "../abstracts" as *;
+
+/* ******************* Global ******************* */
+
+/* Global reset for box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body, * {
+  font-size-adjust: none;
+}
+
+
+* {
+  font-size: 16px;
+  font-family: $main-font;
+  color: $lightDark;
+  text-decoration: none;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow: hidden;
+  height: 100%;
+  font-family: $main-font;
+  -webkit-text-size-adjust: 100%; // Firefox fix
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%; // Firefox fix end
+  &.allow-scroll {
+    overflow: auto;
+    height: auto;
+  }
+}
+
+
+body {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  padding-bottom: var(--footer-height);
+  background-color: $lightDark;
+  color-scheme: dark;
+  overflow: hidden;
+  font-family: $main-font;
+  line-height: normal; // Myers line height fix
+
+  p {
+    font-family: $main-font;
+    padding-bottom: 0.9vh;
+    opacity: 100%;
+    word-break: break-word;
+    word-wrap: normal;
+    text-align: center;
+    justify-content: center;
+    color: $darkLight;
+  }
+
+
+  br {
+    display: block;
+    margin: 5.7px 0;
+    content: " ";
+  }
+
+  &.allow-scroll {
+    overflow: auto;
+    height: auto;
+  }
+}
+
+button {
+  background-color: rgba(0,0,0,0);
+  border: none;
+}
+
+.responsiveSocial {
+  width: 5vh;
+  max-width: 12em;
+  height: auto;
+}
+
+
+.responsiveSystem {
+  width: 100%;
+  max-width: 23em;
+  height: auto;
+}
+
+.mobile-story {
+  display: none;
+}
+
+.fadeWrapper {
+  padding-bottom: 0;
+  animation: fadeIn 1.5s;
+  opacity: 1;
+  position: relative;
+}
+
+/* ******************* Global End ******************* */
+

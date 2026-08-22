@@ -1,0 +1,21 @@
+// DIGITIZEDNOISE.COM
+// 2026
+//
+// 7-1 Sass manifest.
+// Imports intentionally follow the original cascade order.
+
+@use "vendors/meyer-reset";
+@use "base/accessibility";
+@use "themes/scrollbars";
+@use "base/typography";
+@use "components/animations";
+@use "base/base";
+@use "pages/home";
+@use "layout/navigation";
+@use "pages/downloads";
+@use "pages/about";
+@use "pages/visual";
+@use "pages/systems";
+@use "layout/footer";
+@use "components/lightbox";
+@use "components/systems-debug";

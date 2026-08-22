@@ -1,0 +1,32 @@
+@use "../abstracts" as *;
+
+/* ******************* Footer ******************* */
+
+.footer {
+  pointer-events: none;
+  font-family: $code-font;
+  font-size: $footerSize;
+  color: white;
+}
+
+.footerWrapper {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(
+          var(--footer-height) + env(safe-area-inset-bottom, 0px)
+  );
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 99900005;
+  width: 100%;
+  background-color: #000;
+}
+
+
+
+/* ******************* Footer End ******************* */
+

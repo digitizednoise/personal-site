@@ -1,0 +1,39 @@
+// Reusable style recipes. This partial must not emit CSS.
+
+@mixin textAnimation {
+  position: relative;
+  overflow: hidden;
+  background-size: 200% 400%;
+  animation: TransitioningBackground 10s ease infinite;
+
+  &::before {
+    content: '';
+    display: block;
+    position: absolute;
+    background: rgba(255, 255, 255, 0.5);
+    top: 0;
+    filter: blur(30px);
+    transform: translateX(-15vh) skewX(-15deg);
+  }
+  &::after {
+    content: '';
+    display: block;
+    position: absolute;
+    background: rgba(255, 255, 255, 0.2);
+    width: 20px;
+    height: 100%;
+    top: 0;
+    filter: blur(5px);
+    transform: translateX(-15vh) skewX(-15deg);
+  }
+  &:hover {
+    cursor: pointer;
+    opacity: 100%;
+    &::before,
+    &::after {
+      transform: translateX(45vh) skewX(-15deg);
+      transition: 0.6s;
+    }
+  }
+}
+

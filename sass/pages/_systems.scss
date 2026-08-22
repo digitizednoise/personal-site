@@ -1,0 +1,1219 @@
+@use "../abstracts" as *;
+
+/* ******************* Systems ******************* */
+
+
+.systemsWrapper {
+  width: 100%;
+  height: 100dvh; // Full viewport height
+  padding-top: 0;
+  padding-bottom: 0;
+  animation: fadeIn 0.5s;
+  overflow: hidden; // Prevent scrollbars
+  display: flex;
+  position: relative;
+
+  &.grid-layout {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding-inline: 0;
+    gap: 10px;
+  }
+}
+
+
+
+.info-panel {
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  margin-right: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  //border: 2px solid #1111ff;
+  //box-shadow: 0 0 20px rgba(17, 17, 255, 0.3), inset 0 0 15px rgba(17, 17, 255, 0.2);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(10px);
+  z-index: 130000 !important;
+  margin-top: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease, backdrop-filter 0.3s ease;
+  box-sizing: border-box;
+  max-height: 100%;
+
+  &.is-transitioning {
+    opacity: 0 !important;
+  }
+
+  .info-panel-close {
+    display: none;
+  }
+
+  .info-header {
+
+    h2 {
+      margin: 0;
+      font-size: $MsystemTitleSize;
+      letter-spacing: 15px;
+      padding-left: 5px; // Offset letter-spacing for perfect centering
+      color: white;
+      font-family: $main-font;
+      justify-content: center;
+      text-align: center;
+      word-wrap: break-word;
+      padding-top: clamp(10px, 3vh, 40px);
+    }
+
+  }
+
+  // PORTFOLIO
+
+  .blogText {
+    font-family: $bit-font;
+    padding-top: 0.2rem;
+  }
+
+  .blogText .span {
+    font-family: 'V323', serif;
+    margin-right: 1vh;
+    margin-left: 1vh;
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    color:  $lightDark;
+    background-color: $darkLight;
+  }
+
+  .info-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    font-size: 2.9rem;
+    line-height: 1.6;
+    padding-right: 10px;
+    padding-bottom: 100px !important;
+    background: transparent !important;
+
+    p { margin-bottom: 15px;  }
+
+    // Responsive overrides for injected carouselInfo content
+    .system-title {
+      display: block !important;
+      font-size: $MsystemTitleSize !important;
+      color: white !important;
+      letter-spacing: 5px !important;
+      padding-left: 5px !important; // Offset letter-spacing for perfect centering
+      text-align: center !important;
+      width: 100% !important;
+      margin-bottom: 10px !important;
+      padding-top: 5px !important;
+      font-family: $main-font !important;
+      border-bottom: 1px solid white !important;
+      padding-bottom: 5px !important;
+    }
+    .description { font-size: $MdescriptionSize; margin-bottom: 0; color: #ccc; text-align: center; }
+    .subdescription { font-size: $MmainDescriptionSize; margin-bottom: 15px; text-align: center; color: white; }
+
+    .iframe-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      height: 0;
+      iframe {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+      }
+    }
+
+    .carousel-container {
+      position: relative !important;
+      width: 100% !important;
+      height: 0 !important;
+      padding-bottom: 56.25% !important;
+      overflow: hidden !important;
+      border: 1px solid white !important;
+      background: #000 !important;
+      margin-bottom: 15px !important;
+
+      .carousel-item {
+        display: none !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+
+        &.active {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+
+        .images {
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+
+          img, iframe {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            object-fit: cover !important;
+            border: 1px white !important;
+          }
+        }
+      }
+
+      .carousel-prev, .carousel-next {
+        position: absolute !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        background: rgba(0, 0, 0, 0) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.0) !important;
+        padding: 10px 5px !important;
+        cursor: pointer !important;
+        z-index: 10 !important;
+        font-size: 0.7rem !important;
+        transition: background 0.2s ease !important;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2) !important;
+        }
+      }
+
+      .carousel-prev { left: 0 !important; }
+      .carousel-next { right: 0 !important; }
+    }
+
+    .lightbox-link-container {
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .lightbox-open-link {
+      color: #00ffff;
+      text-decoration: underline;
+      font-size: 0.8rem;
+      font-family: $code-font;
+      cursor: pointer;
+      &:hover, &:focus-visible {
+        color: white;
+        outline: none;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.75);
+      }
+    }
+
+    .carousel-container,
+    .iframe-container,
+    .media-item,
+    .main-video-section,
+    .text-item {
+      margin-bottom: 7px !important;
+    }
+
+    .carousel-container,
+    .iframe-container,
+    .carousel-item,
+    .carousel-item .images {
+      border: none !important;
+    }
+
+    .carousel-item .images img,
+    .carousel-item .images iframe,
+    .iframe-container iframe {
+      border: none !important;
+      object-fit: contain !important;
+    }
+
+
+    .techdescription {
+      font-size: $mainDescriptionSize;
+      color: white;
+      font-family: $code-font;
+      padding: 5px 0 !important;
+      margin: 0 !important;
+    }
+
+  }
+
+  .info-footer {
+    padding-top: 15px;
+    margin-top: 15px;
+
+    .controls-hint {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #00ffff;
+      font-weight: bold;
+    }
+  }
+
+  &.desktop-layout {
+    // The Systems wrapper already spans the usable viewport between the fixed
+    // navbar and footer. Stay inside it instead of sizing against the viewport
+    // and reserving that chrome a second time.
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border: none !important;
+    z-index: 130000 !important;
+    box-sizing: border-box !important;
+
+
+    .info-body {
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      box-sizing: border-box !important;
+      padding: 0 !important;
+
+
+      #info-inner-content {
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
+        height: 100% !important;
+        padding-right: 0 !important;
+
+
+        .info-flex-container {
+          &.layout-systems {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            padding-inline: 0 !important;
+            padding-top: 0 !important;
+            gap: 1.6vh !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+
+            .top-row {
+              display: flex !important;
+              flex: 3.8 !important;
+              min-height: 0 !important;
+              overflow: hidden !important;
+              justify-content: center !important;
+              align-items: stretch !important;
+              gap: clamp(24px, 4vw, 96px) !important;
+              padding-inline: 0 !important;
+              box-sizing: border-box !important;
+
+
+              > div {
+                min-width: 0 !important;
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+                overflow: hidden !important;
+                background: transparent !important;
+              }
+
+              .main-video-section {
+                flex: 0 0 auto !important;
+                width: fit-content !important;
+                max-width: 52vw !important;
+                justify-content: flex-start !important;
+                align-items: center !important;
+                gap: 0.4vh !important;
+
+                .system-title {
+                  align-self: center !important;
+                  display: block !important;
+                  font-size: $systemTitleSize !important;
+                  color: white !important;
+                  flex-shrink: 1 !important;
+                  letter-spacing: 7px !important;
+                  text-align: center !important;
+                  width: fit-content !important;
+                  border-bottom: 2px solid white !important;
+                  padding-left: 5px !important;
+                }
+
+                .description {
+                  align-self: center !important;
+                  font-size: $descriptionSize !important;
+                  flex-shrink: 1 !important;
+                  text-align: center !important;
+                }
+
+                .iframe-container {
+                  width: auto !important;
+                  max-width: 100% !important;
+                  margin: 0 auto !important;
+                  padding-bottom: 0 !important;
+                  height: 100% !important;
+                  aspect-ratio: 16 / 9 !important;
+                  max-height: 48vh !important;
+                  align-self: center !important;
+                  flex-shrink: 1 !important;
+                  position: relative !important;
+                  overflow: hidden !important;
+
+                  iframe {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                  }
+                }
+
+                .lightbox-link-container {
+                  margin-bottom: 2px !important;
+                  flex-shrink: 0 !important;
+                }
+
+                .blogText {
+                  margin-top: 0.5vh !important;
+                  margin-bottom: 0.5vh !important;
+                  flex-shrink: 1 !important;
+                  .techdescription {
+                    font-size: $techSize !important;
+                  }
+                }
+              }
+
+              .text-item {
+                flex: 0 1 min(40vw, 980px) !important;
+                padding: 10px !important;
+                justify-content: center !important;
+                align-items: center !important;
+
+                .subdescription {
+                  font-size: $mainDescriptionSize !important;
+                  line-height: 1.5 !important;
+                  text-align: center !important;
+                  overflow-y: auto !important;
+                  max-height: 100% !important;
+                  color: white !important;
+                }
+              }
+            }
+
+            .bottom-row {
+              display: flex !important;
+              flex: 1.8 !important;
+              min-height: 0 !important;
+              min-width: 0 !important;
+              width: 100% !important;
+              max-width: 100%;
+              overflow: hidden !important;
+              gap: 1.5vw !important;
+
+              > div {
+                flex: 1;
+                min-width: 0 !important;
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                overflow: hidden !important;
+                position: relative !important;
+                background: transparent !important;
+              }
+
+              .media-item {
+                min-height: 0 !important;
+              }
+
+              .grid-item .lightbox-link-container {
+                position: absolute !important;
+                bottom: 2px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                margin: 0 !important;
+                z-index: 10 !important;
+              }
+            }
+
+
+            .grid-item {
+              .subdescription {
+                font-size: $mainDescriptionSize !important;
+                line-height: 1.4 !important;
+              }
+
+              .images {
+                width: auto !important;
+                max-width: 100% !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                aspect-ratio: 16 / 9 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                img,
+                iframe {
+                  width: auto !important;
+                  height: 100% !important;
+                  max-width: 100% !important;
+                  max-height: 100% !important;
+                  object-fit: contain !important;
+                  border: solid 1px white !important;
+                  box-sizing: border-box !important;
+                }
+              }
+
+              .iframe-container {
+                height: 100% !important;
+                width: auto !important;
+                aspect-ratio: 16 / 9 !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                padding-bottom: 0 !important;
+                position: relative !important;
+                border: none !important;
+                margin: 0 !important;
+                align-self: center !important;
+                overflow: hidden !important;
+
+                iframe {
+                  position: absolute !important;
+                  top: 0 !important;
+                  left: 0 !important;
+                  width: 100% !important;
+                  height: 100% !important;
+                  border: solid 1px white !important;
+                  box-sizing: border-box !important;
+                  //background: #000 !important;
+                }
+              }
+
+              .carousel-container {
+                height: 100% !important;
+                width: auto !important;
+                aspect-ratio: 16 / 9 !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                padding-bottom: 0 !important;
+                margin: 0 !important;
+                position: relative !important;
+                background: #000 !important;
+                border: none !important;
+                align-self: center !important;
+                overflow: hidden !important;
+
+                .carousel-item .images img,
+                .carousel-item .images iframe {
+                  object-fit: contain !important;
+                  border: solid 1px white !important;
+                  background: #000 !important;
+                }
+              }
+            }
+          }
+        }
+
+
+      }
+    }
+
+    .info-footer {
+      display: none !important;
+    }
+  }
+}
+
+/********** Systems Page Styles **********/
+
+#systems-info-panel {
+  opacity: 0;
+  visibility: hidden;
+  background: rgba(0,0,0,0.8);
+  border: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 130005;
+  // Fill the Systems wrapper exactly; the wrapper itself reserves the fixed
+  // navbar and footer, so the panel cannot overlap either one.
+  position: absolute;
+  inset: 0;
+  transform: none;
+  height: auto;
+  max-height: none;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  pointer-events: auto;
+  backdrop-filter: blur(20px);
+  padding-bottom: 0;
+
+  &.is-active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  &.is-transitioning {
+    opacity: 0;
+  }
+}
+
+.systemsWrapper.grid-layout {
+  position: fixed;
+  top: var(--navbar-height);
+  bottom: var(--footer-height);
+  left: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  z-index: 19000;
+  margin: 0;
+  padding: 0;
+}
+
+// Systems Menu
+
+.systems-nav {
+  position: fixed;
+  top: var(--navbar-height);
+  bottom: 0;
+  left: 0;
+  width: var(--systems-nav-w);
+  // Sit above the info-panel (which is z-index: 130000 !important in desktop-layout)
+  z-index: 130001;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(20px, 3vh, 40px) clamp(20px, 1.8vw, 36px);
+  background-color: rgba(0, 0, 0, 0.7);
+
+  animation: fadeIn 1s ease-out;
+  pointer-events: auto;
+  // Use `left` for the collapse animation so `position: fixed` descendants (the toggle)
+  // aren't dragged along by a transform.
+  transition: left 0.35s ease, opacity 0.25s ease;
+}
+
+.systems-nav-title {
+  font-family: $main-font;
+  font-size: clamp(1.6rem, 2.0rem + 1.55vw , 3.6rem);
+  letter-spacing: 2px;
+  color: white;
+  padding-bottom: clamp(14px, 1vh, 28px);
+  margin-bottom: clamp(14px, 2vh, 28px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+
+
+.systems-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 20px);
+}
+
+// Chevron toggle — fixed to viewport, positioned at bottom-left corner of the systems-nav.
+.sidebar-toggle {
+  position: fixed;
+  bottom: clamp(40px, 3vh, 60px);
+  left: clamp(20px, 1.8vw, 36px);
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 130002;
+  transition: opacity 0.2s ease;
+  pointer-events: auto;
+
+  &:hover { opacity: 0.6; }
+
+  &:focus-visible {
+    opacity: 0.6;
+    outline: 1px solid #fff;
+    outline-offset: 1px;
+  }
+  svg { display: block; transition: transform 0.35s ease; }
+}
+
+body.systems-nav-collapsed {
+  .systems-nav {
+    left: calc(-1 * var(--systems-nav-w));
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sidebar-toggle {
+    svg { transform: rotate(180deg); }
+  }
+}
+
+.sys-btn {
+
+  color:white;
+  font-family: $main-font;
+  font-size: clamp(1.0rem, calc(0.7rem + 0.95vw), 1.4rem);
+  cursor: pointer;
+  text-align: left;
+
+}
+
+.sys-btn:hover,
+.sys-btn:focus-visible {
+  color: white;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+  outline: none;
+
+  &[data-section="GREEN"] { color: #00ff44; text-shadow: 0 0 10px rgba(0, 255, 68, 0.55); }
+  &[data-section="BLUE"]  { color: #0088ff; text-shadow: 0 0 10px rgba(0, 136, 255, 0.55); }
+  &[data-section="RED"]   { color: #ff2200; text-shadow: 0 0 10px rgba(255, 34, 0, 0.55); }
+}
+
+
+
+@media (max-width: 1100px) {
+  .systemsWrapper.grid-layout {
+    flex-direction: column;
+    padding-top: 0;
+    overflow: hidden;
+    justify-content: flex-start;
+    // `top` and `bottom` already reserve the navbar/footer space.
+    height: auto;
+    z-index: 130005;
+  }
+
+  .info-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    margin: 0;
+    z-index: 130005 !important;
+    opacity: 0;
+    visibility: hidden;
+    background: rgba(0, 0, 0, 0.95); // Lightbox-style background
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition: opacity .37s ease, visibility .37s ease, backdrop-filter .37s ease, -webkit-backdrop-filter .37s ease;
+    border: none;
+    padding: 0;
+
+    display: flex; // Changed from display: none to flex to allow transition
+    align-items: flex-start;
+    justify-content: center;
+
+    &.is-active {
+      opacity: 1;
+      visibility: visible;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+
+    .info-body {
+      width: 100%;
+      max-width: 100%;
+      max-height: none;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 5vw 5vh;
+
+      // FIX: let it take remaining space in the overlay
+      flex: 1 1 auto;
+      min-height: 0;
+
+    }
+
+
+
+    .info-footer {
+      display: none; // Hide the old footer on mobile lightbox
+    }
+  }
+
+  // The legacy desktop info-body reserves 100px at the bottom with !important.
+  // In the mobile panel that shortens the scroll viewport above the real footer.
+  #systems-info-panel:not(.desktop-layout) > .info-body {
+    flex: 1 1 100%;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    padding: 0 5vw !important;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .info-panel:not(.desktop-layout) {
+    .info-flex-container.layout-systems {
+      > .top-row {
+        display: flex;
+        flex-direction: column;
+      }
+
+      > .top-row > .text-item,
+      > .bottom-row {
+        display: none !important;
+      }
+
+      > .mobile-story {
+        display: flex !important;
+        flex-direction: column;
+        width: 100%;
+        gap: 18px;
+      }
+    }
+
+    .mobile-story {
+      .mobile-story-text {
+        font-size: $MmainDescriptionSize !important;
+        line-height: 1.45 !important;
+        padding: 0 !important;
+        text-align: center !important;
+      }
+
+      .mobile-story-media {
+        width: 100%;
+      }
+
+      .iframe-container,
+      .carousel-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        aspect-ratio: 16 / 9;
+        height: auto !important;
+        padding-bottom: 0 !important;
+        margin: 0 !important;
+        position: relative;
+        overflow: hidden;
+        border: none !important;
+      }
+
+      .iframe-container iframe,
+      .carousel-item .images img,
+      .carousel-item .images iframe {
+        border: 1px solid white !important;
+        object-fit: contain !important;
+        box-sizing: border-box !important;
+      }
+
+      .iframe-container iframe {
+        position: absolute !important;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      .carousel-container {
+        background: #000;
+      }
+
+      .carousel-item,
+      .carousel-item .images {
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      .carousel-item .images img,
+      .carousel-item .images iframe {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+      }
+    }
+  }
+}
+
+// PORTFOLIO_PAGES
+
+
+.description {
+  font-size: 4vw;
+  padding-bottom: 1vh;
+  font-family: $main-font;
+  color: $darkLight;
+}
+
+// 3D CAROUSEL (namespaced) START
+// Removed unused .carousel3d-container and .carousel3d styles
+
+.iframe-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  justify-content: center;
+}
+
+.iframe-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+
+}
+
+.subdescription {
+  text-align: center;
+  font-size: $mainDescriptionSize;
+  word-wrap: normal;
+  font-family: $main-font;
+  color: white;
+  padding: 1.1vh;
+}
+
+//For links within the systems descriptions.
+
+.subdescription a {
+  color: blue;
+  text-decoration: underline;
+  font-size: $linkSize;
+  //font-weight: bold;      /* Makes the text bold */
+}
+
+.description {
+  display: flex;
+  justify-content: center;
+}
+
+.techdescription {
+  font-size: 2.5vh;
+  font-family: $main-font;
+  word-wrap: normal;
+  text-align: center;
+  color: $darkLight;
+}
+
+@media only screen and (max-height: 500px) {
+
+
+  /* Systems Landscape Overrides - Make it like desktop (split view) */
+  .systemsWrapper.grid-layout {
+    flex-direction: row !important;
+    padding-top: 0 !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .info-panel {
+    position: relative !important;
+    inset: auto !important;
+    flex-grow: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    background: transparent !important;
+    backdrop-filter: blur(10px) !important;
+    display: flex !important;
+    pointer-events: auto !important;
+    box-shadow: none !important;
+    z-index: 30000 !important;
+
+
+    .info-header, .info-body {
+      max-width: 100% !important;
+    }
+
+    .info-body {
+      max-height: none !important;
+    }
+  }
+}
+
+
+/* ---------- Systems: horizontal-scroll layout ---------- */
+/* Structure injected by systems-content modules:
+   .info-flex-container.layout-scroll.right-scroll-wrapper   ← clip container
+     └ .layout-scroll-row                                     ← wide flex row (transformed by JS)
+         ├ .main-video-section  (Vimeo + title + blurb, fixed width)
+         └ .scroll-grid          (2-row CSS grid, columns of text/media)              */
+
+.info-flex-container.layout-scroll {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+
+  .layout-scroll-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: max-content;
+    height: 100%;
+    gap: clamp(32px, 4vw, 96px);
+    // the clip container now sits to the right of the sidebar (see rule below on
+    // .info-panel.desktop-layout #info-inner-content:has(.layout-scroll)), so the
+    // row itself only needs modest inline padding.
+    padding-inline: clamp(24px, 4vw, 80px);
+    padding-block: clamp(10px, 2vh, 30px);
+    box-sizing: border-box;
+    will-change: transform;
+  }
+
+  // LEFT: Vimeo section — larger container, occupies its own flex column
+  .main-video-section {
+
+    flex: 0 0 auto;
+    width: min(58vw, 900px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    gap: clamp(8px, 1.4vh, 18px);
+    height: 100%;
+    max-height: 100%;
+    min-width: 0;
+    padding-block: clamp(4px, 1vh, 12px);
+
+    .system-title {
+      display: block;
+      width: fit-content;
+      align-self: center;
+      font-family: $main-font;
+      font-size: $systemTitleSize;
+      letter-spacing: 8px;
+      color: white;
+      border-bottom: 2px solid white;
+      padding: 0 8px 6px 16px; // right-shift compensates the letter-spacing so the underline reads centered
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    // 16:9 Vimeo container — scales down when either the section's width OR the
+    // viewport height shrinks, so the frame never overflows its parent.
+    // Width is clamped to whichever is smaller: 100% of the section, or the width
+    // implied by the available vertical space (~viewport minus header/footer/chrome).
+    .iframe-container {
+      flex: 0 1 auto;
+      width: min(100%, calc((100dvh - 200px) * 16 / 9));
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      padding-bottom: 0;
+      position: relative;
+      overflow: hidden;
+      align-self: center;
+      min-height: 0;
+
+      iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        box-sizing: border-box;
+        background: #000;
+      }
+    }
+
+    .blogText {
+      font-family: $bit-font;
+      color: white;
+      text-align: center;
+      flex-shrink: 0;
+
+      .span {
+        font-family: $bit-font;
+        letter-spacing: 3px;
+      }
+    }
+
+    .subdescription {
+      font-family: $main-font;
+      font-size: $mainDescriptionSize;
+      color: white;
+      text-align: center;
+      line-height: 1.5;
+      padding: 0 4px;
+      flex-shrink: 0;
+      max-width: 100%;
+    }
+  }
+
+  // RIGHT: 2-row grid — each column pairs (top/bottom) text + media, all 16:9 media
+  .scroll-grid {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-rows: auto auto;
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(300px, 26vw, 550px);
+    gap: clamp(16px, 2vw, 40px);
+    align-items: center;
+    justify-items: center;
+    align-content: center;
+    height: 100%;
+    padding-block: clamp(4px, 1vh, 12px);
+
+    > * {
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    // Paragraphs need normal inline text flow so their ::after cursor stays
+    // attached to the final sentence instead of becoming a stacked flex item.
+    > p.text-cell {
+      display: block;
+    }
+
+    .text-cell {
+      font-family: $main-font;
+      font-size: $mainDescriptionSize;
+      color: white;
+      text-align: center;
+      line-height: 1.65;
+      padding: 6px 10px;
+      max-width: 100%;
+      overflow: hidden;
+      gap: 1em;
+
+      // When the text-cell wraps composite content (description + link), make
+      // the nested paragraph inherit the cell's typography rather than losing
+      // to the more specific `.info-panel .info-body .subdescription` rule.
+      .subdescription {
+        font: inherit;
+        color: white;
+        line-height: inherit;
+        text-align: inherit;
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+      }
+    }
+
+    // Reset gallery-item grid spans when placed inside scroll-grid
+    .gallery-item {
+      display: block;
+      grid-column: auto !important;
+      grid-row: auto !important;
+      width: 100%;
+      height: auto;
+      // Inherit the aspect-ratio defined by .landscape, .portrait, .square
+    }
+
+    .gallery-item.portrait {
+      grid-row: span 2 !important;
+    }
+
+    // Vimeo iframe placed directly in the grid — match landscape gallery-item sizing
+    .grid-item {
+      width: 100%;
+
+      .iframe-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 56.25%; // 16:9
+        overflow: hidden;
+
+        iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: 1px solid rgba(255, 255, 255, 0.75);
+          box-sizing: border-box;
+          background: #000;
+        }
+      }
+    }
+
+    // When a .text-cell wraps both a description AND a .clients link block,
+    // keep it stacked and tight (no auto-hoisted padding from the global .clients rule).
+    .text-cell .clients {
+      padding-top: 1.4em;
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+  }
+}
+
+// When the info-panel is in desktop-layout, the .layout-scroll takes over #info-inner-content.
+// Shrink #info-inner-content from the left by the sidebar width so the horizontally-scrolling
+// content is clipped to the right of the sidebar (no overlap when the user scrolls).
+.info-panel.desktop-layout .info-body #info-inner-content:has(.layout-scroll) {
+  padding: 0 0 0 var(--systems-nav-w) !important;
+  transition: padding-left 0.35s ease;
+}
+
+// When the menu is collapsed, clip horizontally scrolling content at the viewport edge.
+body.systems-nav-collapsed .info-panel.desktop-layout .info-body #info-inner-content:has(.layout-scroll) {
+  padding-left: 0 !important;
+}
+
+// Mobile / narrow: stack vertically, let the info-body scroll natively, drop the transform
+@media (max-width: 1100px) {
+  .info-flex-container.layout-scroll {
+    overflow: visible;
+    height: auto;
+
+    .layout-scroll-row {
+      flex-direction: column;
+      width: 100%;
+      height: auto;
+      transform: none !important;
+      gap: 24px;
+      padding-inline: 4vw;
+    }
+
+    .main-video-section {
+      width: 100%;
+      height: auto;
+      gap: 10px !important; // Reduce spacing before technologies section
+
+      .iframe-container { max-height: none; }
+
+      .blogText {
+        margin-top: 5px !important; // Spacing before the technologies section is smaller
+        margin-bottom: 0 !important; // Fixed clean padding after technologies section
+      }
+    }
+
+    .scroll-grid {
+      grid-template-rows: none;
+      grid-auto-flow: row;
+      grid-template-columns: 1fr;
+      grid-auto-columns: unset;
+      width: 100%;
+      height: auto;
+      padding-top: 0 !important;
+    }
+  }
+}
+
+/* ---------- Systems: horizontal-scroll layout End ---------- */
+
+/* ******************* Systems End ******************* */

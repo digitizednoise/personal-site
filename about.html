@@ -1,109 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-	    <meta charset="UTF-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	    <meta name="description" content="ABOUT DIGITIZEDNOISE">
-	    <link rel="preload" href="css/style.css" as="style">
-	    <link rel="stylesheet" href="css/style.css">
-	    <link rel="shortcut icon" type="image/png" href="/img/dNOISE_LOGO 300x300.png">
-	    <title>ABOUT - DIGITIZEDNOISE</title>
-	</head>
-	<body>
-	    <div class="siteWrapper">
-	        <nav class="navModal" aria-label="Main Navigation" aria-hidden="true">
-	            <div class="navWrapper">
-	                <a href="/visual" class="button" ><div class="sitebutton">VISUAL</div></a>
-	                <a href="/systems" class="button"><div class="sitebutton">SYSTEMS</div></a>
-	                <a href="/about" class="button"><div class="sitebutton">ABOUT</div></a>
-	                <a href="/downloads" class="button"><div class="sitebutton">DOWNLOADS</div></a>
-	                <a href="mailto:contact@digitizednoise.com" class="button"><div class="sitebutton">CONTACT</div></a>
-	                <a></a>
-	                <div class="socialbox">
-	                    <a href="https://www.instagram.com/digitizednoise/" target="_blank" rel="noopener" aria-label="Instagram">
-	                        <div class="socialbutton"><img src="img/instagram.png" alt="Instagram" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" target="_blank" rel="noopener" aria-label="YouTube">
-	                        <div class="socialbutton"><img src="img/youtube.png" alt="YouTube" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://www.twitch.tv/digitizednoise" target="_blank" rel="noopener" aria-label="Twitch">
-	                        <div class="socialbutton"><img src="img/twitch.png" alt="Twitch" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://tiktok.com/@digitizednoise" target="_blank" rel="noopener" aria-label="TikTok">
-	                        <div class="socialbutton"><img src="img/tiktok.png" alt="TikTok" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                </div>
-	            </div>
-	        </nav>
-	        <div class="indexWrapper">
-	            <header class="navigation" id="navbar">
-	                <div class="homelogo">
-	                    <a href="/index"><img src="img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
-	                </div>
-	                <button type="button" class="menubar" id="navmenu" aria-label="Menu" aria-expanded="false">
-	                    <div class="bar1"></div>
-	                    <div class="bar2"></div>
-	                    <div class="bar3"></div>
-	                </button>
-	            </header>
-	            <footer class="footerWrapper">
-	                <div class="footer">contact@digitizednoise.com</div>
-	            </footer>
-	        </div>
-	    </div>
-	    <div class = "fadeWrapper">
-	        <main class = "aboutWrapper">
-	            <div class = "pageTitle">ABOUT</div>
-	            <div class="aboutBox">
-	                <div class = 'about'>
-	                    <div class="bioContent">
-	                        <p class="bioText">I am a Los Angeles-based audiovisual artist specializing in real-time 3D, mainly
-	                            working with audio-reactive, interactive, and data visualization; translating data and sound into real-time systems.
-	                            With my main background in audio, technology, and live events, I specialize in high-energy multimedia experiences and developing
-	                            new ways to synchronize the physical and digital worlds further.
-	                        </p>
-	                        <p class="maintainedText with-cursor">This website was developed and is currently maintained by myself.</p>
-	                    </div>
-	
-	                    <div class = "clients">
-	                        <span class="clients-caret" aria-hidden="true">></span>
-	
-	                        <p style="font-weight: bold">CLIENTS</p>
-	
-	                        <p>
-	                            <a href="https://vimeo.com/1002176266?fl=tl&fe=ec"
-	                               data-vimeo="1002176266"
-	                               onclick="openLightbox(this); return false;">
-	                                2024 | KAWAI PIANOS | <br> NAMM ANAHEIM CONVENTION CENTER
-	                            </a>
-	                        </p>
-	                        <p>
-	                            <a href="https://vimeo.com/1151814950?fl=ip&fe=ec"
-	                               data-vimeo="1151814950"
-	                               onclick="openLightbox(this); return false;">
-	                                2024 | ULTIMATE SOUND AND LIGHTING | <br> REDONDO BEACH
-	                            </a>
-	                        </p>
-	                        <p>
-	                            <a href="https://vimeo.com/1151804758?fl=ip&fe=ec"
-	                               data-vimeo="1151804758"
-	                               onclick="openLightbox(this); return false;">
-	                                2023 | 6AM & DIRTY EPIC EVENTS | <br> DOWNTOWN LOS ANGELES
-	                            </a>
-	                        </p>
-	                    </div>
-	                </div>
-	            </div>
-	        </main>
-	    </div>
-	    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
-	        <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">x</button>
-	        <div class="lightbox-content" id="lightboxContent"></div>
-	    </div>
-	    <script src="/js/perlin.js" async ></script>
-	    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js" async></script>
-	    <script src="https://player.vimeo.com/api/player.js" defer></script>
-	    <script src="/js/gallery.js" defer></script>
-	    <script src="/js/clients-caret.js" defer></script>
-	</body>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="ABOUT DIGITIZEDNOISE">
+	<link rel="preload" href="sass/style.css" as="style">
+	<link rel="stylesheet" href="sass/style.css">
+	<link rel="icon" type="image/png" href="/media/img/dNOISE_LOGO 300x300.png">
+	<title>ABOUT - DIGITIZEDNOISE</title>
+</head>
+<body>
+<div class="siteWrapper">
+	<nav class="navModal" id="main-navigation" aria-label="Main Navigation" aria-hidden="true">
+		<ul class="navWrapper">
+			<li> <a href="/visual" class="button sitebutton">VISUAL</a> </li>
+			<li> <a href="/systems" class="button sitebutton">SYSTEMS</a> </li>
+			<li> <a href="/about" class="button sitebutton" aria-current="page">ABOUT</a> </li>
+			<li> <a href="/downloads" class="button sitebutton">DOWNLOADS</a> </li>
+			<li> <a href="mailto:contact@digitizednoise.com" class="button sitebutton">CONTACT</a> </li>
+			<li>
+				<div class="socialbox">
+					<a href="https://www.instagram.com/digitizednoise/" class="socialbutton" target="_blank" rel="noopener" aria-label="Instagram"><img src="media/img/instagram.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" class="socialbutton" target="_blank" rel="noopener" aria-label="YouTube"><img src="media/img/youtube.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://www.twitch.tv/digitizednoise" class="socialbutton" target="_blank" rel="noopener" aria-label="Twitch"><img src="media/img/twitch.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://tiktok.com/@digitizednoise" class="socialbutton" target="_blank" rel="noopener" aria-label="TikTok"><img src="media/img/tiktok.png" alt="" class="responsiveSocial" loading="lazy"></a>
+				</div>
+			</li>
+		</ul>
+	</nav>
+	<div class="indexWrapper">
+		<header class="navigation" id="navbar">
+			<div class="homelogo">
+				<a href="/"><img src="media/img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
+			</div>
+			<button type="button" class="menubar" id="navmenu" aria-label="Open menu" aria-expanded="false" aria-controls="main-navigation">
+				<div class="bar1"></div>
+				<div class="bar2"></div>
+				<div class="bar3"></div>
+			</button>
+		</header>
+		<footer class="footerWrapper">
+			<div class="footer">contact@digitizednoise.com</div>
+		</footer>
+	</div>
+</div>
+<div class = "fadeWrapper">
+	<main class = "aboutWrapper" id="main">
+		<!--<div class = "pageTitle">ABOUT</div> -->
+		<div class="aboutBox">
+			<div class = 'about'>
+				<div class="bioContent">
+					<p class="bioText" style="text-indent: 0;">I am an audiovisual artist based in Los Angeles, with a background in audio, 3D, live events and an education in Computer Science.
+					I specialize in real-time experiences, translating data, sounds, and human interaction into visual systems. Online or offline, my goal is always to inspire and make experiences
+					feel like magic.<br><br>
+					</p>
+					<p class="maintainedText with-cursor">This website was developed and is currently maintained by myself.
+					<br> <br>	<a href="mailto:contact@digitizednoise.com" class="email-link">E-mail</a> for any inquiries.</p>
+				</div>
+				<div class = "clients">
+					<span class="clients-caret" aria-hidden="true">></span>
+					<p style="font-weight: bold">CLIENTS</p>
+					<p>
+						<a href="https://vimeo.com/1002176266?fl=tl&fe=ec"
+						   data-vimeo="1002176266"
+						   class="landscape">
+							2024 | KAWAI PIANOS | NAMM ANAHEIM CONVENTION CENTER
+						</a>
+					</p>
+					<p>
+						<a href="https://vimeo.com/1151814950?fl=ip&fe=ec"
+						   data-vimeo="1151814950"
+						   class="landscape">
+							2024 | ULTIMATE SOUND AND LIGHTING | REDONDO BEACH
+						</a>
+					</p>
+					<p>
+						<a href="https://vimeo.com/1151804758?fl=ip&fe=ec"
+						   data-vimeo="1151804758"
+						   class="landscape">
+							2023 | 6AM & DIRTY EPIC EVENTS | DOWNTOWN LOS ANGELES
+						</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	</main>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Media viewer">
+	<button class="lightbox-close" type="button" aria-label="Close media viewer">x</button>
+	<div class="lightbox-content" id="lightboxContent"></div>
+</div>
+<!-- *********** JAVASCRIPT! *********** -->
+<script src="https://player.vimeo.com/api/player.js" async></script>
+<script type="module" src="/js/nav.js"></script>
+<script type="module" src="/js/gallery.js"></script>
+<script src="/js/clients-caret.js" defer></script>
+</body>
 </html>

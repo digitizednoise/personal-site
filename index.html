@@ -1,78 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-	    <meta charset="UTF-8">
-	    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1 user-scalable=no" >
-	    <meta name="description" content="DIGITIZEDNOISE">
-	    <link rel="preload" href="css/style.css" as="style">
-	    <link rel="stylesheet" href="css/style.css">
-	    <title>DIGITIZEDNOISE</title>
-	    <link rel="shortcut icon" type="image/png" href="/img/dNOISE_LOGO 300x300.png"/>
-	    <script type="importmap">
-	        {
-	            "imports": {
-	                "three": "https://unpkg.com/three@0.172.0/build/three.module.js",
-	                "three/webgpu": "https://unpkg.com/three@0.172.0/build/three.webgpu.js",
-	                "three/tsl": "https://unpkg.com/three@0.172.0/build/three.tsl.js",
-	                "three/addons/": "https://unpkg.com/three@0.172.0/examples/jsm/"
-	            }
-	        }
-	    </script>
-	</head>
-	<body>
-	    <div class="siteWrapper">
-	        <nav class="navModal" aria-label="Main Navigation" aria-hidden="true">
-	            <div class="navWrapper">
-	                <a href="/visual" class="button" ><div class="sitebutton">VISUAL</div></a>
-	                <a href="/systems" class="button"><div class="sitebutton">SYSTEMS</div></a>
-	                <a href="/about" class="button"><div class="sitebutton">ABOUT</div></a>
-	                <a href="/downloads" class="button"><div class="sitebutton">DOWNLOADS</div></a>
-	                <a href="mailto:contact@digitizednoise.com" class="button"><div class="sitebutton">CONTACT</div></a>
-	                <a></a>
-	                <div class="socialbox">
-	                    <a href="https://www.instagram.com/digitizednoise/" target="_blank" rel="noopener" aria-label="Instagram">
-	                        <div class="socialbutton"><img src="img/instagram.png" alt="Instagram" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" target="_blank" rel="noopener" aria-label="YouTube">
-	                        <div class="socialbutton"><img src="img/youtube.png" alt="YouTube" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://www.twitch.tv/digitizednoise" target="_blank" rel="noopener" aria-label="Twitch">
-	                        <div class="socialbutton"><img src="img/twitch.png" alt="Twitch" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://tiktok.com/@digitizednoise" target="_blank" rel="noopener" aria-label="TikTok">
-	                        <div class="socialbutton"><img src="img/tiktok.png" alt="TikTok" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                </div>
-	            </div>
-	        </nav>
-	        <div class="indexWrapper">
-	            <header class="navigation" id="navbar">
-	                <div class="homelogo">
-	                    <a href="/index"><img src="img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
-	                </div>
-	                <button type="button" class="menubar" id="navmenu" aria-label="Menu" aria-expanded="false">
-	                    <div class="bar1"></div>
-	                    <div class="bar2"></div>
-	                    <div class="bar3"></div>
-	                </button>
-	            </header>
-	            <footer class="footerWrapper">
-	                <div class="footer">> contact@digitizednoise.com</div>
-	            </footer>
-	        </div>
-	    </div>
-	    <div class="fadeWrapper">
-	        <main class="homeWrapper">
-	            <div class="mainText" id="index">
-	                <div class="indexText">DIGITIZEDNOISE</div>
-	                <div class="indexSubText"> 3D | REAL-TIME | UI / UX | MULTIMEDIA <!--| EMBEDDED!--></div>
-	            </div>
-	            <div class="frontPageWrapper">
-	                <div id="voxel-ocean-container" style="width:100vw;height:100vh;margin:0;padding:0;overflow:hidden;"></div>
-	            </div>
-	        </main>
-	    </div>
-	    <script type="module" src="js/home.js"></script>
-	</body>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="DIGITIZEDNOISE - HOME PAGE (3D CONTENT)">
+	<link rel="preload" href="sass/style.css" as="style">
+	<link rel="stylesheet" href="sass/style.css">
+	<link rel="icon" type="image/png" href="/media/img/dNOISE_LOGO 300x300.png">
+	<title>DIGITIZEDNOISE</title>
+</head>
+<body>
+<div class="siteWrapper">
+	<nav class="navModal" id="main-navigation" aria-label="Main Navigation" aria-hidden="true">
+		<ul class="navWrapper">
+			<li> <a href="/visual" class="button sitebutton">VISUAL</a> </li>
+			<li> <a href="/systems" class="button sitebutton">SYSTEMS</a> </li>
+			<li> <a href="/about" class="button sitebutton">ABOUT</a> </li>
+			<li> <a href="/downloads" class="button sitebutton">DOWNLOADS</a> </li>
+			<li> <a href="mailto:contact@digitizednoise.com" class="button sitebutton">CONTACT</a> </li>
+			<li>
+				<div class="socialbox">
+					<a href="https://www.instagram.com/digitizednoise/" class="socialbutton" target="_blank" rel="noopener" aria-label="Instagram"><img src="media/img/instagram.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" class="socialbutton" target="_blank" rel="noopener" aria-label="YouTube"><img src="media/img/youtube.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://www.twitch.tv/digitizednoise" class="socialbutton" target="_blank" rel="noopener" aria-label="Twitch"><img src="media/img/twitch.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://tiktok.com/@digitizednoise" class="socialbutton" target="_blank" rel="noopener" aria-label="TikTok"><img src="media/img/tiktok.png" alt="" class="responsiveSocial" loading="lazy"></a>
+				</div>
+			</li>
+		</ul>
+	</nav>
+	<div class="indexWrapper">
+		<header class="navigation" id="navbar">
+			<div class="homelogo">
+				<a href="/" aria-current="page"><img src="media/img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
+			</div>
+			<button type="button" class="menubar" id="navmenu" aria-label="Open menu" aria-expanded="false" aria-controls="main-navigation">
+				<div class="bar1"></div>
+				<div class="bar2"></div>
+				<div class="bar3"></div>
+			</button>
+		</header>
+		<footer class="footerWrapper">
+			<div class="footer">contact@digitizednoise.com</div>
+		</footer>
+	</div>
+</div>
+<div class="fadeWrapper">
+	<main class="homeWrapper" id="main">
+		<div class="mainText" id="index">
+			<div class="indexText">DIGITIZEDNOISE</div>
+			<div class="indexSubText"> 3D | REAL-TIME | DESIGN | MULTIMEDIA <!--| EMBEDDED!--></div>
+		</div>
+		<div class="frontPageWrapper">
+			<div id="voxel-ocean-container" style="width:100vw;height:100dvh;margin:0;padding:0;overflow:hidden;"></div>
+		</div>
+	</main>
+</div>
+<!-- *********** JAVASCRIPT! *********** -->
+<script type="importmap">
+	{
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.webgpu.js",
+            "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.webgpu.js",
+            "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.tsl.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/",
+            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/",
+            "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/lib/browser.module.js"
+        }
+    }
+</script>
+<script type="module" src="/js/nav.js"></script>
+<script type="module" src="js/home.js" defer></script>
+</body>
 </html>

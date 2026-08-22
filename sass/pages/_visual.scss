@@ -1,0 +1,364 @@
+@use "../abstracts" as *;
+
+/* ******************* Visual ******************* */
+
+.images {
+  display: flex;
+  justify-content: center;
+  transition: transform 0.2s, opacity 0.3s;
+  width: auto;
+  margin: 1vh;
+}
+
+.images:hover {
+  cursor: pointer;
+  opacity: 65%;
+  transform: scale(1.0);
+}
+
+// Visual Gallery
+
+.visualWrapper {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  margin-top: 0;
+  padding-top: var(--navbar-height) ; // Responsive navbar height
+  padding-bottom: calc(
+          var(--footer-height) + env(safe-area-inset-bottom, 0px)
+  );
+  background-color: black;
+}
+
+.gallery-container {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+// Grid
+
+.gallery-grid {
+  --rows: 23;
+  --gap: 14px;
+  --avail: calc(
+          100dvh
+          - var(--navbar-height)
+          - env(safe-area-inset-bottom, 0px)
+  );
+
+  //--avail: calc(
+  //        100dvh
+  //        - var(--navbar-height)
+  //        - var(--footer-height)
+  //        - env(safe-area-inset-bottom, 0px)
+  //);
+
+  --u: calc((var(--avail) - (var(--rows) - 1) * var(--gap)) / var(--rows));
+  display: grid;
+  grid-auto-flow: column dense;
+  grid-auto-columns: var(--u);
+  grid-template-rows: repeat(var(--rows), var(--u));
+  gap: var(--gap);
+  height: var(--avail);
+  width: max-content;
+  margin-left: 10px;
+  margin-right: 10px;
+  //background-color: green;
+}
+
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+
+  &:hover {
+    opacity: 0.70;
+    z-index: 5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+    z-index: 10;
+    opacity: 0.70;
+  }
+
+  img, video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border: 0;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border: 0;
+    pointer-events: none;
+  }
+
+  .vimeo-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+    border: 1px solid white !important;
+    box-sizing: border-box !important;
+  }
+
+  &.is-loading {
+    cursor: wait;
+  }
+}
+
+.iframe-container,
+.images,
+.carousel-item {
+  .vimeo-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+    border: 1px solid white !important;
+    box-sizing: border-box !important;
+  }
+
+  &.is-loading {
+    cursor: wait;
+  }
+}
+
+.gallery-item.square {
+  grid-column: span 6;
+  grid-row: span 6;
+  aspect-ratio: 1/1;
+  border: 1px solid white;
+}
+
+.gallery-item.landscape {
+  grid-column: span 14;
+  grid-row: span 8;
+  aspect-ratio: 16/9;
+  border: 1px solid white;
+}
+
+
+.gallery-item.portrait {
+  grid-column: span 8;
+  grid-row: span 14;
+  aspect-ratio: 9/16;
+  border: 1px solid white;
+}
+
+.item-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 55%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+  font-size: 0.3vh;
+
+  .gallery-item:hover &,
+  .gallery-item:focus-visible & { opacity: 1; }
+
+  .item-info {
+    color: #fff;
+
+    .item-title {
+      font-family: $console-font;
+      font-size: 1.3vh;
+      margin-bottom: 4px;
+      letter-spacing: .2px;
+      color: $darkLight;
+    }
+
+    .item-type {
+      font-family: $code-font;
+      font-size: 1.14vh;
+      opacity: 1;
+      color: $darkLight;
+    }
+  }
+}
+
+// Images Lightbox
+
+.lightbox {
+  position: fixed;
+  top: var(--navbar-height);
+  bottom: var(--footer-height);
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .37s ease, visibility .37s ease, backdrop-filter .37s ease, -webkit-backdrop-filter .37s ease;
+  z-index: 200000;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  padding: 0;
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .lightbox-content {
+    width: 100%;
+    height: auto;
+    max-width: 95vw;
+    max-height: calc(100dvh - var(--navbar-height) - var(--footer-height));
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .lightbox-media-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 100%;
+      max-height: 100%;
+      top: 0;
+    }
+
+    .lightbox-info {
+      margin-top: 15px;
+      color: #fff;
+      text-align: left;
+      font-family: $code-font;
+      line-height: 1.2;
+      padding-left: 0.2vh;
+    }
+
+    .lightbox-software {
+      font-size: $techSize;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: $darkLight;
+    }
+
+    .lightbox-year {
+      font-size: $mainDescriptionSize;
+      opacity: 0.7;
+      color: $darkLight;
+    }
+
+    img, video, .lightbox-vimeo-container, iframe {
+      max-width: 100%;
+      max-height: calc(89dvh - var(--navbar-height) - var(--footer-height));
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      border: 1px solid rgba(255, 255, 255, 1.0);
+    }
+
+    iframe {
+      aspect-ratio: 16/9;
+      width: 90vw;
+      max-width: 1200px;
+
+      &.portrait-video {
+        aspect-ratio: 9/16;
+        width: auto;
+        height: calc(89dvh - var(--navbar-height) - var(--footer-height));
+        max-width: 90vw;
+      }
+    }
+
+    .lightbox-vimeo-container {
+      position: relative;
+      width: 90vw;
+      max-width: 1200px;
+      aspect-ratio: 16/9;
+      max-height: calc(89dvh - var(--navbar-height) - var(--footer-height));
+      border: 1px solid rgba(255, 255, 255, 1.0);
+      overflow: hidden;
+
+      &.portrait-container, &.portrait-video {
+        aspect-ratio: 9/16;
+        width: auto;
+        height: calc(89dvh - var(--navbar-height) - var(--footer-height));
+        max-width: 90vw;
+      }
+
+      iframe {
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+        aspect-ratio: inherit;
+        display: block;
+      }
+
+      .vimeo-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 1;
+        pointer-events: none;
+        transition: opacity 0.8s ease;
+        border: none !important;
+      }
+
+      &.is-loading {
+        cursor: wait;
+      }
+    }
+
+    // Removed separate iframe block to consolidate with main media rules
+  }
+}
+
+// Lightbox End
+
+
+@media only screen and (max-height: 500px) and (max-width: 1000px) {
+
+  .gallery-grid {
+    // Rows/gaps can be tuned at breakpoints, but the math stays consistent
+    --rows: 18;
+  }
+
+
+}
+
+/* ******************* Visual End ******************* */
+

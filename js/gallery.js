@@ -1,358 +1,431 @@
-// gallery.js - Lightbox and dynamic item utilities for Visual Gallery
+const LIGHTBOX_TRIGGER_SELECTOR = '.gallery-item, [data-vimeo], [data-youtube]';
+const VIMEO_IFRAME_SELECTOR = 'iframe[src*="player.vimeo.com/video/"][src*="background=1"]';
+const FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  '[href]',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+  'iframe',
+].join(',');
 
-(function(){
-  // Cache Vimeo players per iframe to avoid recreating them on every pause/resume
-  const dnVimeoPlayerCache = new WeakMap();
-  function getVimeoPlayerForIframe(iframe) {
-    if (!window.Vimeo?.Player) return null;
+const vimeoPlayers = new WeakMap();
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-    let player = dnVimeoPlayerCache.get(iframe);
-    if (!player) {
-      player = new Vimeo.Player(iframe);
-      dnVimeoPlayerCache.set(iframe, player);
-    }
-    return player;
+let lastFocusedElement = null;
+let previousBodyOverflow = null;
+let backgroundInertState = [];
+let lightboxInertState = [];
+
+function getVimeoPlayerConstructor() {
+  return globalThis.Vimeo?.Player ?? null;
+}
+
+function getVimeoPlayer(iframe) {
+  const Player = getVimeoPlayerConstructor();
+  if (!Player || !iframe) return null;
+
+  let player = vimeoPlayers.get(iframe);
+  if (!player) {
+    player = new Player(iframe);
+    vimeoPlayers.set(iframe, player);
   }
+  return player;
+}
 
-  function getBackgroundVimeoIframes() {
-    const gallery = document.getElementById('gallery');
-    if (!gallery) return [];
+function getBackgroundVimeoIframes() {
+  return [...document.querySelectorAll(VIMEO_IFRAME_SELECTOR)];
+}
 
-    // Only target the thumbnail/grid Vimeo embeds (background=1)
-    return Array.from(gallery.querySelectorAll('iframe[src*="player.vimeo.com/video/"][src*="background=1"]'));
-  }
+function callOnBackgroundPlayers(method) {
+  if (!getVimeoPlayerConstructor()) return;
 
-  function pauseBackgroundVimeos() {
-    if (!window.Vimeo?.Player) return;
-
-    getBackgroundVimeoIframes().forEach((iframe) => {
-      const player = getVimeoPlayerForIframe(iframe);
-      if (!player) return;
-
-      player.pause().catch(() => {
-        // Some browsers/edge cases can reject; safe to ignore.
+  getBackgroundVimeoIframes().forEach((iframe) => {
+    getVimeoPlayer(iframe)
+      ?.[method]()
+      .catch(() => {
+        // Browser autoplay and media-control policies can reject these promises.
       });
-    });
-  }
+  });
+}
 
-  function resumeBackgroundVimeos() {
-    if (!window.Vimeo?.Player) return;
+function setBackgroundInert(lightbox, shouldInert) {
+  if (shouldInert) {
+    if (backgroundInertState.length) return;
 
-    getBackgroundVimeoIframes().forEach((iframe) => {
-      const player = getVimeoPlayerForIframe(iframe);
-      if (!player) return;
+    const closeControl = document.querySelector('.lightbox-close');
+    lightboxInertState = [...new Set([lightbox, closeControl])]
+      .filter(Boolean)
+      .map((element) => ({
+        element,
+        wasInert: element.hasAttribute('inert'),
+      }));
+    lightboxInertState.forEach(({ element }) => element.removeAttribute('inert'));
 
-      player.play().catch(() => {
-        // Autoplay can still be blocked in some situations.
-        // Usually OK here because closing the modal is a user gesture.
-      });
-    });
-  }
-
-  let lastFocusedElement = null;
-  let dnLightboxBackdropHandlerBound = false;
-
-  function openLightbox(element) {
-    const lightbox = document.getElementById('lightbox');
-    const content = document.getElementById('lightboxContent');
-    if (!lightbox || !content) return;
-
-    // Bind once: close on backdrop click (don’t reassign lightbox.onclick every open)
-    if (!dnLightboxBackdropHandlerBound) {
-      lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) closeLightbox();
-      });
-      dnLightboxBackdropHandlerBound = true;
-    }
-
-    // Save the element that triggered the lightbox to return focus later
-    lastFocusedElement = element;
-
-    // Pause background Vimeo thumbs so nothing plays behind the modal
-    pauseBackgroundVimeos();
-
-    // Reset display style just in case it was set to none previously
-    lightbox.style.display = '';
-
-    // Clear previous content
-    content.innerHTML = '';
-
-    // Check if it's a video (iframe) or image
-    const iframe = element.querySelector?.('iframe');
-    const img = element.querySelector?.('img');
-    const isPortrait = element.classList?.contains('portrait');
-    const youtubeUrl = element.getAttribute?.('data-youtube');
-    const vimeoId = element.getAttribute?.('data-vimeo');
-    const itemType = element.querySelector?.('.item-type')?.textContent || '';
-    const itemYear = element.getAttribute?.('data-year') || '';
-
-    let mediaElement = null;
-
-    if (youtubeUrl) {
-      const newIframe = document.createElement('iframe');
-      const autoplayUrl = youtubeUrl.includes('?')
-        ? `${youtubeUrl}&autoplay=1`
-        : `${youtubeUrl}?autoplay=1`;
-
-      newIframe.src = autoplayUrl;
-      newIframe.width = '800';
-      newIframe.height = '450';
-      newIframe.frameBorder = '0';
-      newIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share';
-      newIframe.referrerPolicy = 'strict-origin-when-cross-origin';
-      if (isPortrait) newIframe.classList.add('portrait-video');
-      mediaElement = newIframe;
-    } else if (vimeoId) {
-      // Allow opening a Vimeo lightbox from ANY element that has data-vimeo (not just gallery items)
-      const newIframe = document.createElement('iframe');
-      newIframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1`;
-      newIframe.width = '800';
-      newIframe.height = '450';
-      newIframe.frameBorder = '0';
-      newIframe.allow = 'autoplay; fullscreen; picture-in-picture';
-      if (isPortrait) newIframe.classList.add('portrait-video');
-      mediaElement = newIframe;
-    } else if (iframe) {
-      // Handle YouTube video
-      if (iframe.src.includes('youtube.com') || iframe.src.includes('youtu.be')) {
-        const newIframe = document.createElement('iframe');
-        // Extract YouTube video ID and create autoplay URL
-        const youtubeUrl = iframe.src;
-        const autoplayUrl = youtubeUrl.includes('?')
-          ? `${youtubeUrl}&autoplay=1`
-          : `${youtubeUrl}?autoplay=1`;
-
-        newIframe.src = autoplayUrl;
-        newIframe.width = '800';
-        newIframe.height = '450';
-        newIframe.frameBorder = '0';
-        newIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share';
-        newIframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        if (isPortrait) newIframe.classList.add('portrait-video');
-        mediaElement = newIframe;
-      }
-      // Handle Vimeo video without data-vimeo attribute
-      else if (iframe.src.includes('vimeo.com')) {
-        const newIframe = document.createElement('iframe');
-        // Extract Vimeo ID from the src and create autoplay URL
-        const vimeoMatch = iframe.src.match(/vimeo\.com\/video\/(\d+)/);
-        if (vimeoMatch) {
-          const vimeoId = vimeoMatch[1];
-          newIframe.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1`;
-          newIframe.width = '800';
-          newIframe.height = '450';
-          newIframe.frameBorder = '0';
-          newIframe.allow = 'autoplay; fullscreen; picture-in-picture';
-          if (isPortrait) newIframe.classList.add('portrait-video');
-          mediaElement = newIframe;
-        }
-      }
-    } else if (img) {
-      // Handle image (including animated WebP)
-      const newImg = document.createElement('img');
-      newImg.src = img.src;
-      newImg.alt = img.alt || '';
-      mediaElement = newImg;
-    }
-
-    if (mediaElement) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'lightbox-media-wrapper';
-      wrapper.appendChild(mediaElement);
-
-      if (itemType) {
-        const info = document.createElement('div');
-        info.className = 'lightbox-info';
-
-        const software = document.createElement('div');
-        software.className = 'lightbox-software';
-        software.textContent = itemType;
-
-        const year = document.createElement('div');
-        year.className = 'lightbox-year';
-        year.textContent = itemYear || '2024'; // Individual year from data-year attribute
-
-        info.appendChild(software);
-        info.appendChild(year);
-        wrapper.appendChild(info);
-      }
-
-      content.appendChild(wrapper);
-    }
-
-    // Force a browser reflow so the transition animation plays nicely
-    void lightbox.offsetWidth;
-
-    lightbox.classList.add('active');
-    lightbox.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-
-    // Focus the close button for accessibility
-    const closeBtn = lightbox.querySelector('.lightbox-close');
-    if (closeBtn) {
-      // Small timeout to ensure the element is visible before focusing
-      setTimeout(() => closeBtn.focus(), 50);
-    }
-
-  }
-
-  function closeLightbox() {
-    const lightbox = document.getElementById('lightbox');
-    if (!lightbox) return;
-
-    lightbox.classList.remove('active');
-    lightbox.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = 'auto';
-
-    // Stop any playing videos (iframe/audio) immediately
-    const content = document.getElementById('lightboxContent');
-    if (content) content.innerHTML = '';
-
-    // Resume background Vimeo thumbs after modal closes
-    resumeBackgroundVimeos();
-
-    // Clear inline style so CSS can handle visibility
-    lightbox.style.display = '';
-
-    // Return focus to the element that opened the lightbox
-    if (lastFocusedElement) {
-      lastFocusedElement.focus();
-      lastFocusedElement = null; // avoid stale references
-    }
-  }
-
-  // Close with Escape and handle Tab trapping
-  document.addEventListener('keydown', function(e) {
-    const lightbox = document.getElementById('lightbox');
-    if (!lightbox || !lightbox.classList.contains('active')) return;
-
-    if (e.key === 'Escape') {
-      closeLightbox();
-    }
-
-    if (e.key === 'Tab') {
-      const focusableElements = lightbox.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), iframe');
-      if (focusableElements.length === 0) return;
-
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-
-      // Guardrail: if focus somehow escapes the modal, bring it back in.
-      if (!lightbox.contains(document.activeElement)) {
-        firstElement.focus();
-        e.preventDefault();
+    const seen = new Set();
+    const allowedSelector = '.menubar, .navModal';
+    const rememberAndInert = (element) => {
+      if (seen.has(element)) return;
+      seen.add(element);
+      backgroundInertState.push({ element, wasInert: element.hasAttribute('inert') });
+      element.setAttribute('inert', '');
+    };
+    const inertOutsideAllowedControls = (element) => {
+      if (element.matches(allowedSelector)) return;
+      if (!element.querySelector(allowedSelector)) {
+        rememberAndInert(element);
         return;
       }
+      [...element.children].forEach(inertOutsideAllowedControls);
+    };
 
-      if (e.shiftKey) { // Shift + Tab
-        if (document.activeElement === firstElement) {
-          lastElement.focus();
-          e.preventDefault();
-        }
-      } else { // Tab
-        if (document.activeElement === lastElement) {
-          firstElement.focus();
-          e.preventDefault();
-        }
+    backgroundInertState = [];
+    [...document.body.children].forEach((element) => {
+      if (
+        element === lightbox ||
+        element.matches('script, style, link, .lightbox-close')
+      ) {
+        return;
       }
-    }
-  });
-
-  // Expose helpers globally
-  window.openLightbox = openLightbox;
-  window.closeLightbox = closeLightbox;
-
-  function setupVimeoPlaceholders() {
-    if (!window.Vimeo?.Player) return;
-
-    getBackgroundVimeoIframes().forEach((iframe) => {
-      const item = iframe.closest('.gallery-item');
-      if (!item) return;
-
-      const placeholder = item.querySelector('.vimeo-placeholder');
-      if (!placeholder) return;
-
-      const player = getVimeoPlayerForIframe(iframe);
-      if (!player) return;
-
-      // When the video starts playing, fade out the placeholder
-      player.on('play', function() {
-        placeholder.style.opacity = '0';
-      });
-
-      // Also check if it's already playing (*e.g. if it loaded before JS)
-      player.getPaused().then(paused => {
-        if (!paused) {
-          placeholder.style.opacity = '0';
-        }
-      });
+      inertOutsideAllowedControls(element);
     });
+    return;
   }
 
-  // Initialize on load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupVimeoPlaceholders);
-  } else {
-    // Small delay to ensure Vimeo API is fully ready if needed
-    setTimeout(setupVimeoPlaceholders, 100);
+  backgroundInertState.forEach(({ element, wasInert }) => {
+    element.toggleAttribute('inert', wasInert);
+  });
+  backgroundInertState = [];
+
+  lightboxInertState.forEach(({ element, wasInert }) => {
+    element.toggleAttribute('inert', wasInert);
+  });
+  lightboxInertState = [];
+}
+
+function createIframe({ src, title, allow, portrait = false }) {
+  const iframe = document.createElement('iframe');
+  iframe.src = src;
+  iframe.width = '800';
+  iframe.height = '450';
+  iframe.title = title;
+  iframe.allow = allow;
+  iframe.allowFullscreen = true;
+  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+  if (portrait) iframe.classList.add('portrait-video');
+  return iframe;
+}
+
+function createLoadingVideo(portrait) {
+  const placeholder = document.createElement('video');
+  placeholder.src = portrait ? '/media/webm/loading.webm' : '/media/webm/loading-2.webm';
+  placeholder.className = 'vimeo-placeholder';
+  placeholder.autoplay = !reducedMotion.matches;
+  placeholder.loop = true;
+  placeholder.muted = true;
+  placeholder.defaultMuted = true;
+  placeholder.playsInline = true;
+  placeholder.preload = 'auto';
+  placeholder.setAttribute('loop', '');
+  placeholder.addEventListener('ended', () => {
+    placeholder.currentTime = 0;
+    placeholder.play().catch(() => {});
+  });
+  placeholder.setAttribute('aria-hidden', 'true');
+  return placeholder;
+}
+
+function revealVimeo(container, placeholder, status) {
+  if (!placeholder.isConnected) return;
+
+  placeholder.style.opacity = '0';
+  container.classList.remove('is-loading');
+  container.removeAttribute('aria-busy');
+  status?.remove();
+  placeholder.addEventListener('transitionend', () => placeholder.remove(), {
+    once: true,
+  });
+}
+
+function monitorVimeo(iframe, container, placeholder, status) {
+  let revealed = false;
+  let playerIsConnected = false;
+  const reveal = () => {
+    if (revealed) return;
+    revealed = true;
+    revealVimeo(container, placeholder, status);
+  };
+
+  const connectPlayer = () => {
+    if (revealed || playerIsConnected || !iframe.isConnected) return;
+
+    const player = getVimeoPlayer(iframe);
+    if (!player) return;
+
+    playerIsConnected = true;
+    player.on('play', reveal);
+    player
+      .getPaused()
+      .then((paused) => {
+        if (!paused) reveal();
+      })
+      .catch(() => {});
+  };
+
+  // Attach first, then check synchronously so an async SDK cannot finish in
+  // the gap between the initial check and listener registration.
+  document
+    .querySelector('script[src*="player.vimeo.com/api/player.js"]')
+    ?.addEventListener('load', connectPlayer, { once: true });
+  // Lightbox media is assembled before its wrapper is attached to the page.
+  // Defer the immediate SDK check until that synchronous render is complete.
+  queueMicrotask(connectPlayer);
+}
+
+function createVimeoMedia(vimeoId, title, portrait) {
+  const iframe = createIframe({
+    src: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+    title: `${title} video`,
+    allow: 'autoplay; fullscreen; picture-in-picture',
+    portrait,
+  });
+  const container = document.createElement('div');
+  const placeholder = createLoadingVideo(portrait);
+  const status = document.createElement('span');
+
+  container.className = 'lightbox-vimeo-container is-loading';
+  container.setAttribute('aria-busy', 'true');
+  if (portrait) container.classList.add('portrait-container');
+
+  status.className = 'visually-hidden';
+  status.setAttribute('role', 'status');
+  status.textContent = 'Loading video…';
+
+  container.append(placeholder, iframe, status);
+  monitorVimeo(iframe, container, placeholder, status);
+  return container;
+}
+
+function createYouTubeMedia(url, title, portrait) {
+  const separator = url.includes('?') ? '&' : '?';
+  return createIframe({
+    src: `${url}${separator}autoplay=1`,
+    title: `${title} video`,
+    allow:
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; fullscreen; picture-in-picture; web-share',
+    portrait,
+  });
+}
+
+function getVimeoId(trigger, sourceIframe) {
+  const explicitId = trigger.dataset.vimeo;
+  if (explicitId) return explicitId;
+  return sourceIframe?.src.match(/vimeo\.com\/video\/(\d+)/)?.[1] ?? null;
+}
+
+function createMedia(trigger) {
+  const sourceIframe = trigger.querySelector('iframe');
+  const sourceImage = trigger.querySelector('img');
+  const sourceVideo = trigger.querySelector('video');
+  const portrait = trigger.classList.contains('portrait');
+  const title =
+    trigger.getAttribute('aria-label') || sourceImage?.alt || sourceIframe?.title || 'Media';
+  const youtubeUrl = trigger.dataset.youtube;
+  const vimeoId = getVimeoId(trigger, sourceIframe);
+
+  if (youtubeUrl) return createYouTubeMedia(youtubeUrl, title, portrait);
+  if (vimeoId) return createVimeoMedia(vimeoId, title, portrait);
+  if (sourceIframe?.src.includes('youtube.com')) {
+    return createYouTubeMedia(sourceIframe.src, title, portrait);
   }
 
-  window.addGalleryItem = function(type, src, title, itemType, vimeoId = null, youtubeId = null, placeholderSrc = null, year = null) {
-    const gallery = document.getElementById('gallery');
-    if (!gallery) return;
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = `gallery-item ${type}`;
-    if (year) item.setAttribute('data-year', year);
-    if (title) item.setAttribute('aria-label', `View ${title}`);
-    item.onclick = () => openLightbox(item);
-
-    if (vimeoId) {
-      item.setAttribute('data-vimeo', vimeoId);
-      item.innerHTML = `
-        <iframe src="https://player.vimeo.com/video/${vimeoId}?background=1&muted=1"></iframe>
-        ${placeholderSrc ? `<img src="${placeholderSrc}" class="vimeo-placeholder" alt="">` : ''}
-        <div class="item-overlay">
-            <div class="item-info">
-                <div class="item-title">${title}</div>
-                <div class="item-type">${itemType}</div>
-            </div>
-        </div>
-      `;
-
-      if (placeholderSrc && window.Vimeo?.Player) {
-        const iframe = item.querySelector('iframe');
-        const player = getVimeoPlayerForIframe(iframe);
-        if (player) {
-          player.on('play', () => {
-            const p = item.querySelector('.vimeo-placeholder');
-            if (p) p.style.opacity = '0';
-          });
-        }
-      }
-    } else if (youtubeId) {
-      item.setAttribute('data-youtube', `https://www.youtube.com/embed/${youtubeId}`);
-      item.innerHTML = `
-        <img src="/img/bombei.webp" alt="${title}" loading="lazy">
-        <div class="item-overlay">
-            <div class="item-info">
-                <div class="item-title">${title}</div>
-                <div class="item-type">${itemType}</div>
-            </div>
-        </div>
-      `;
-    } else {
-      item.innerHTML = `
-        <img src="${src}" alt="${title}">
-        <div class="item-overlay">
-            <div class="item-info">
-                <div class="item-title">${title}</div>
-                <div class="item-type">${itemType}</div>
-            </div>
-        </div>
-      `;
-    }
-
-    gallery.appendChild(item);
+  if (sourceImage) {
+    const image = document.createElement('img');
+    image.src = sourceImage.currentSrc || sourceImage.src;
+    image.alt = sourceImage.alt;
+    return image;
   }
-})();
+
+  if (sourceVideo) {
+    const video = document.createElement('video');
+    video.src = sourceVideo.currentSrc || sourceVideo.src;
+    video.autoplay = !reducedMotion.matches;
+    video.controls = true;
+    video.loop = sourceVideo.loop;
+    video.playsInline = true;
+    return video;
+  }
+
+  return null;
+}
+
+function createMediaInfo(trigger) {
+  const softwareText = trigger.querySelector('.item-type')?.textContent?.trim();
+  if (!softwareText) return null;
+
+  const info = document.createElement('div');
+  const software = document.createElement('div');
+  const year = document.createElement('div');
+
+  info.className = 'lightbox-info';
+  software.className = 'lightbox-software';
+  software.textContent = softwareText;
+  year.className = 'lightbox-year';
+  year.textContent = trigger.dataset.year || '';
+  info.append(software);
+  if (year.textContent) info.append(year);
+  return info;
+}
+
+function renderLightboxContent(content, trigger) {
+  const media = createMedia(trigger);
+  if (!media) return false;
+
+  const wrapper = document.createElement('div');
+  const info = createMediaInfo(trigger);
+  wrapper.className = 'lightbox-media-wrapper';
+  wrapper.append(media);
+  if (info) wrapper.append(info);
+  content.replaceChildren(wrapper);
+  return true;
+}
+
+function openLightbox(trigger) {
+  const lightbox = document.getElementById('lightbox');
+  const content = document.getElementById('lightboxContent');
+  if (!lightbox || !content || !renderLightboxContent(content, trigger)) return;
+
+  lastFocusedElement = trigger;
+  callOnBackgroundPlayers('pause');
+  lightbox.classList.add('active');
+  lightbox.setAttribute('aria-hidden', 'false');
+  setBackgroundInert(lightbox, true);
+  previousBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(() => {
+    document.querySelector('.lightbox-close')?.focus();
+  });
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById('lightbox');
+  if (!lightbox?.classList.contains('active')) return;
+
+  lightbox.classList.remove('active');
+  lightbox.setAttribute('aria-hidden', 'true');
+  setBackgroundInert(lightbox, false);
+  document.body.style.overflow = previousBodyOverflow ?? '';
+  previousBodyOverflow = null;
+  document.getElementById('lightboxContent')?.replaceChildren();
+  callOnBackgroundPlayers('play');
+
+  if (lastFocusedElement?.isConnected) lastFocusedElement.focus();
+  lastFocusedElement = null;
+}
+
+function trapLightboxFocus(event, lightbox) {
+  const closeControl = document.querySelector('.lightbox-close');
+  const focusableElements = [
+    ...new Set([closeControl, ...lightbox.querySelectorAll(FOCUSABLE_SELECTOR)]),
+  ].filter((element) => element && element.getAttribute('aria-hidden') !== 'true');
+  if (!focusableElements.length) return;
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements.at(-1);
+  if (!focusableElements.includes(document.activeElement)) {
+    event.preventDefault();
+    firstElement.focus();
+  } else if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault();
+    lastElement.focus();
+  } else if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault();
+    firstElement.focus();
+  }
+}
+
+function handleDocumentClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+
+  if (target.closest('.lightbox-close')) {
+    event.preventDefault();
+    event.stopPropagation();
+    closeLightbox();
+    return;
+  }
+
+  const lightbox = target.closest('#lightbox');
+  if (lightbox && target === lightbox) {
+    event.preventDefault();
+    event.stopPropagation();
+    closeLightbox();
+    return;
+  }
+
+  const trigger = target.closest(LIGHTBOX_TRIGGER_SELECTOR);
+  if (!trigger || !document.getElementById('lightbox')) return;
+
+  // Capture prevents legacy inline handlers in excluded, injected system content.
+  event.stopPropagation();
+  const isModifiedLinkClick =
+    trigger.matches('a[href]') &&
+    (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+  if (isModifiedLinkClick) return;
+
+  event.preventDefault();
+  openLightbox(trigger);
+}
+
+function handleDocumentKeydown(event) {
+  const lightbox = document.getElementById('lightbox');
+  if (!lightbox?.classList.contains('active')) return;
+  if (event.defaultPrevented || document.body.dataset.navOpen === 'true') return;
+
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    event.stopPropagation();
+    closeLightbox();
+  } else if (event.key === 'Tab') {
+    trapLightboxFocus(event, lightbox);
+  }
+}
+
+function setupVimeoPreviews() {
+  getBackgroundVimeoIframes().forEach((iframe) => {
+    if (iframe.dataset.vimeoPreviewReady === 'true') return;
+
+    const container = iframe.closest('.gallery-item, .iframe-container, .images, .carousel-item');
+    if (!container) return;
+
+    iframe.dataset.vimeoPreviewReady = 'true';
+    const portrait =
+      container.classList.contains('portrait') || Boolean(container.closest('.portrait'));
+    const placeholder =
+      container.querySelector('.vimeo-placeholder') || createLoadingVideo(portrait);
+    if (!placeholder.isConnected) container.insertBefore(placeholder, iframe);
+
+    container.classList.add('is-loading');
+    container.setAttribute('aria-busy', 'true');
+    monitorVimeo(iframe, container, placeholder, null);
+  });
+}
+
+function stopReducedMotionPreviews() {
+  if (!reducedMotion.matches) return;
+  document.querySelectorAll('.gallery-item > video').forEach((video) => video.pause());
+}
+
+function initGallery() {
+  document.addEventListener('click', handleDocumentClick, true);
+  document.addEventListener('keydown', handleDocumentKeydown);
+  setupVimeoPreviews();
+  stopReducedMotionPreviews();
+
+  const previewObserver = new MutationObserver(() => setupVimeoPreviews());
+  previewObserver.observe(document.body, { childList: true, subtree: true });
+}
+
+initGallery();

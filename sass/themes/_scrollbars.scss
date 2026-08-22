@@ -1,0 +1,44 @@
+/* ******************* Custom Scrollbar Styling (8-bit Retro) ******************* */
+::-webkit-scrollbar {
+  width: 18px;
+  background-color: #000;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #000;
+  border: 1px solid #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #fff;
+  border: 1px solid #000;
+}
+
+::-webkit-scrollbar-button:single-button {
+  background-color: #000;
+  display: block;
+  border: 1px solid #fff;
+  height: 18px;
+  width: 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Up Arrow */
+::-webkit-scrollbar-button:vertical:decrement {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' shape-rendering='crispEdges'><path d='M3 2h2v1H3zm-1 1h4v1H2zm-1 1h6v1H1z' fill='white'/></svg>");
+  background-size: 10px;
+}
+
+/* Down Arrow */
+::-webkit-scrollbar-button:vertical:increment {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' shape-rendering='crispEdges'><path d='M1 3h6v1H1zm1 1h4v1H2zm1 1h2v1H3z' fill='white'/></svg>");
+  background-size: 10px;
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(250,250,250,0.85) rgba(0,0,0,0.5);
+}
+

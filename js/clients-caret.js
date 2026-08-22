@@ -1,70 +1,61 @@
 
 // CLIENTS CARET (TERMINAL-CURSOR)
+// Attach an animated ">" that follows the currently focused/hovered link
+// inside any `.clients` container. Exposes `window.ClientsCaret.init(root)`
+// so it can be re-run after content is injected dynamically (systems page).
 
-document.addEventListener('DOMContentLoaded', () => {
-    const caret = document.querySelector('.clients-caret');
-    const links = document.querySelectorAll('.clients p a');
-    const container = document.querySelector('.clients');
+(function () {
+    function attach(container) {
+        if (!container || container.dataset.clientsCaretBound === 'true') return;
 
-    // Checking our current selected link.
+        const caret = container.querySelector('.clients-caret');
+        const links = container.querySelectorAll('p a');
+        if (!caret || links.length === 0) return;
 
-    if (!caret || links.length === 0 || !container) return;
-    let currentLink = links[0];
+        container.dataset.clientsCaretBound = 'true';
 
-    const updateCaret = (link) => {
-        if (!link || !caret || !container) return;
-        
-        // Is layout ready?
-        requestAnimationFrame(() => {
-            const linkRect = link.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
+        let currentLink = links[0];
 
-            // Calculate position relative to clients container
-            const linkFontSize = parseFloat(getComputedStyle(link).fontSize);
-            
-            const y = (linkRect.top - containerRect.top) + (linkRect.height - caret.offsetHeight) / 2;
-            const x = linkRect.left - containerRect.left - (linkFontSize * 0.85);
+        const updateCaret = (link) => {
+            if (!link) return;
+            requestAnimationFrame(() => {
+                const linkRect = link.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                const linkFontSize = parseFloat(getComputedStyle(link).fontSize);
 
-            caret.style.transform = `translate(${x}px, ${y}px)`;
-            caret.classList.add('visible');
-        });
-    };
+                const y = (linkRect.top - containerRect.top) + (linkRect.height - caret.offsetHeight) / 2;
+                const x = linkRect.left - containerRect.left - (linkFontSize * 0.85);
 
-    links.forEach(link => {
-        const handleInteraction = () => {
-            currentLink = link;
-            updateCaret(link);
+                caret.style.transform = `translate(${x}px, ${y}px)`;
+                caret.classList.add('visible');
+            });
         };
 
-        // Desktop Hover
-        link.addEventListener('mouseenter', handleInteraction);
+        links.forEach(link => {
+            const handleInteraction = () => {
+                currentLink = link;
+                updateCaret(link);
+            };
+            link.addEventListener('mouseenter', handleInteraction);
+            link.addEventListener('focus', handleInteraction);
+            link.addEventListener('touchstart', handleInteraction, { passive: true });
+        });
 
-        // Mobile Tap / Keyboard
-        link.addEventListener('focus', handleInteraction);
+        const reflow = () => updateCaret(currentLink);
+        setTimeout(reflow, 100);
+        setTimeout(reflow, 500);
+        setTimeout(reflow, 2000);
 
-        // Mobile Immediate
-        link.addEventListener('touchstart', handleInteraction, {passive: true});
-    });
+        window.addEventListener('resize', reflow);
+        window.addEventListener('load', reflow);
+    }
 
-    // Initialize position
-    const init = () => {
-        updateCaret(currentLink);
-    };
+    function init(root) {
+        const scope = root || document;
+        scope.querySelectorAll('.clients').forEach(attach);
+    }
 
-    // Initial call
-    setTimeout(init, 100);
-    // Secondary call for slower loading assets
-    setTimeout(init, 500);
-    // Final call just in case
-    setTimeout(init, 2000);
+    window.ClientsCaret = { init };
 
-    // Re-align on window resize
-    window.addEventListener('resize', () => {
-        updateCaret(currentLink);
-    });
-
-    // Re-align on load
-    window.addEventListener('load', () => {
-        updateCaret(currentLink);
-    });
-});
+    document.addEventListener('DOMContentLoaded', () => init(document));
+})();

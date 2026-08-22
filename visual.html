@@ -1,129 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-	    <meta charset="UTF-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	    <meta name="description" content="VISUAL ART DIGITIZEDNOISE">
-	    <link rel="preload" href="css/style.css" as="style">
-	    <link rel="stylesheet" href="css/style.css">
-	    <link rel="shortcut icon" type="image/png" href="/img/dNOISE_LOGO 300x300.png">
-	    <title>VISUALS - DIGITIZEDNOISE</title>
-	</head>
-	<body>
-	    <div class="siteWrapper">
-            <nav class="navModal" aria-label="Main Navigation" aria-hidden="true">
-	            <div class="navWrapper">
-	                <a href="/visual" class="button" ><div class="sitebutton">VISUAL</div></a>
-	                <a href="/systems" class="button"><div class="sitebutton">SYSTEMS</div></a>
-	                <a href="/about" class="button"><div class="sitebutton">ABOUT</div></a>
-	                <a href="/downloads" class="button"><div class="sitebutton">DOWNLOADS</div></a>
-	                <a href="mailto:contact@digitizednoise.com" class="button"><div class="sitebutton">CONTACT</div></a>
-	                <a></a>
-	                <div class="socialbox">
-	                    <a href="https://www.instagram.com/digitizednoise/" target="_blank" rel="noopener" aria-label="Instagram">
-	                        <div class="socialbutton"><img src="img/instagram.png" alt="Instagram" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" target="_blank" rel="noopener" aria-label="YouTube">
-	                        <div class="socialbutton"><img src="img/youtube.png" alt="YouTube" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://www.twitch.tv/digitizednoise" target="_blank" rel="noopener" aria-label="Twitch">
-	                        <div class="socialbutton"><img src="img/twitch.png" alt="Twitch" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                    <a href="https://tiktok.com/@digitizednoise" target="_blank" rel="noopener" aria-label="TikTok">
-	                        <div class="socialbutton"><img src="img/tiktok.png" alt="TikTok" class="responsiveSocial" loading="lazy"></div>
-	                    </a>
-	                </div>
-	            </div>
-	        </nav>
-	        <div class="indexWrapper">
-	            <header class="navigation" id="navbar">
-	                <div class="homelogo">
-	                    <a href="/index"><img src="img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
-	                </div>
-                    <button type="button" class="menubar" id="navmenu" aria-label="Menu" aria-expanded="false">
-                        <div class="bar1"></div>
-                        <div class="bar2"></div>
-                        <div class="bar3"></div>
-                    </button>
-	            </header>
-	            <footer class="footerWrapper">
-	                <div class="footer">contact@digitizednoise.com</div>
-	            </footer>
-	        </div>
-	    </div>
-	    <div class = "fadeWrapper">
-	        <main class="visualWrapper">
-	            <div class="gallery-container">
-	                <div class="gallery gallery-grid" id="gallery">
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-youtube="https://www.youtube.com/embed/pvkrDA8gOjA?si=7uin04bDXSORycl5" data-year="2022" aria-label="View Call Me Crazy (Music Video)">
-	                        <img src="/gifs/callmecrazy.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Unreal Engine & Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item portrait" onclick="openLightbox(this)" data-year="2023" aria-label="View Angels">
-	                        <img src="/img/art_5.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-year="2023" aria-label="View Computer">
-	                        <img src="/img/art_6.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-year="2023" aria-label="View GITS">
-	                        <img src="/img/gits.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item portrait" onclick="openLightbox(this)" data-year="2023" aria-label="View Psycho (Audio Reactive Demo 2)">
-	                        <img src="/gifs/psycho2.webp" alt="" loading="lazy">
-	                        <iframe src="https://player.vimeo.com/video/1112190356?background=1&muted=1" title="Psycho (Audio Reactive Demo 2)" loading="lazy"></iframe>
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-vimeo="838015780" data-year="2022" aria-label="View Audio-Reactive Demo #1">
-	                        <iframe src="https://player.vimeo.com/video/838015780?background=1&muted=1" title="Audio-Reactive Demo #1" loading="lazy" allow="autoplay; fullscreen"></iframe>
-	                        <img src="/gifs/loading-2.webp" class="vimeo-placeholder" alt="">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-year="2025" aria-label="View Computer">
-	                        <img src="/img/art_8.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Unreal Engine</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-year="2021" aria-label="View Purple Planet">
-	                        <img src="/img/bryce3D_1.jpg" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item portrait" onclick="openLightbox(this)" data-vimeo="1112150335" data-year="2024" aria-label="View Real-Time OpenCV Painting">
-	                        <iframe src="https://player.vimeo.com/video/1112150335?background=1&muted=1" title="Real-Time OpenCV Painting" loading="lazy" allow="autoplay; fullscreen"></iframe>
-	                        <img src="/gifs/loading-1.webp" class="vimeo-placeholder" alt="">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item square" onclick="openLightbox(this)" data-year="2022" aria-label="View Pixel Displacement">
-	                        <img src="/img/art_1.jpg" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-year="2022" aria-label="View ff7 bahumaut">
-	                        <img src="/gifs/ff7.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item landscape" onclick="openLightbox(this)" data-youtube="https://www.youtube.com/embed/TEt6PDIrmRU?si=7uin04bDXSORycl5" data-year="2022" aria-label="View Hows Yr Luv Life (Audio Visualizer)">
-	                        <img src="/img/howsyur.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <button type="button" class="gallery-item square" onclick="openLightbox(this)" data-year="2022" aria-label="View Blood Moon">
-	                        <img src="/gifs/bloodmoon.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>
-	                    <!--<button type="button" class="gallery-item square" onclick="openLightbox(this)" data-year="2024" aria-label="View Continue?">
-	                        <img src="/gifs/reset.webp" alt="" loading="lazy">
-	                        <div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
-	                    </button>!-->
-	                </div>
-	            </div>
-	        </main>
-	    </div>
-	    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
-	        <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">x</button>
-	        <div class="lightbox-content" id="lightboxContent"></div>
-	    </div>
-	    <script src="js/horizontal-scroll.js" defer></script>
-	    <script src="https://player.vimeo.com/api/player.js" defer></script>
-	    <script src="/js/gallery.js" defer></script>
-	</body>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+	<meta name="description" content="VISUAL ART DIGITIZEDNOISE">
+	<link rel="preload" href="sass/style.css" as="style">
+	<link rel="stylesheet" href="sass/style.css">
+	<link rel= "icon" type="image/png" href="/media/img/dNOISE_LOGO 300x300.png">
+	<title>VISUALS - DIGITIZEDNOISE</title>
+</head>
+<body>
+<div class="siteWrapper">
+	<nav class="navModal" id="main-navigation" aria-label="Main Navigation" aria-hidden="true">
+		<ul class="navWrapper">
+			<li> <a href="/visual" class="button sitebutton" aria-current="page">VISUAL</a> </li>
+			<li> <a href="/systems" class="button sitebutton">SYSTEMS</a> </li>
+			<li> <a href="/about" class="button sitebutton">ABOUT</a> </li>
+			<li> <a href="/downloads" class="button sitebutton">DOWNLOADS</a> </li>
+			<li> <a href="mailto:contact@digitizednoise.com" class="button sitebutton">CONTACT</a> </li>
+			<li>
+				<div class="socialbox">
+					<a href="https://www.instagram.com/digitizednoise/" class="socialbutton" target="_blank" rel="noopener" aria-label="Instagram"><img src="media/img/instagram.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://www.youtube.com/channel/UCZGFXPxWh8KfscW5u8yazMQ" class="socialbutton" target="_blank" rel="noopener" aria-label="YouTube"><img src="media/img/youtube.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://www.twitch.tv/digitizednoise" class="socialbutton" target="_blank" rel="noopener" aria-label="Twitch"><img src="media/img/twitch.png" alt="" class="responsiveSocial" loading="lazy"></a>
+					<a href="https://tiktok.com/@digitizednoise" class="socialbutton" target="_blank" rel="noopener" aria-label="TikTok"><img src="media/img/tiktok.png" alt="" class="responsiveSocial" loading="lazy"></a>
+				</div>
+			</li>
+		</ul>
+	</nav>
+	<div class="indexWrapper">
+		<header class="navigation" id="navbar">
+			<div class="homelogo">
+				<a href="/"><img src="media/img/dnoizelogo.png" alt="DigitizedNoise Logo"></a>
+			</div>
+			<button type="button" class="menubar" id="navmenu" aria-label="Open menu" aria-expanded="false" aria-controls="main-navigation">
+				<div class="bar1"></div>
+				<div class="bar2"></div>
+				<div class="bar3"></div>
+			</button>
+		</header>
+		<footer class="footerWrapper">
+			<div class="footer">contact@digitizednoise.com</div>
+		</footer>
+	</div>
+</div>
+<div class = "fadeWrapper">
+	<main class="visualWrapper" id="main" data-horizontal-scroll>
+		<div class="gallery-container">
+			<div class="gallery gallery-grid" id="gallery" data-horizontal-scroll-row>
+				<button type="button" class="gallery-item landscape" data-youtube="https://www.youtube.com/embed/pvkrDA8gOjA?si=7uin04bDXSORycl5" data-year="2022" aria-label="Open Call Me Crazy music video">
+					<video src="/media/webm/callmecrazy.webm" autoplay loop muted playsinline></video>
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Unreal Engine & Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item portrait" data-year="2023" aria-label="Open Angels artwork">
+					<img src="/media/img/art_5.webp" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item landscape" data-year="2023" aria-label="Open Computer artwork">
+					<img src="/media/img/art_6.webp" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item landscape" data-year="2023" aria-label="Open GITS artwork">
+					<img src="/media/img/gits.webp" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item portrait" data-vimeo="1112190356" data-year="2023" aria-label="Open Psycho audio-reactive video">
+					<video src="/media/webm/psycho2.webm" autoplay loop muted playsinline></video>
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item landscape" data-vimeo="838015780" data-year="2023" aria-label="Open Audio-Reactive Demo 1">
+					<iframe src="https://player.vimeo.com/video/838015780?background=1&muted=1" title="Audio-Reactive Demo 1 preview" loading="lazy" allow="autoplay; fullscreen" tabindex="-1" aria-hidden="true"></iframe>
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item landscape" data-year="2025" aria-label="Open Unreal Engine artwork">
+					<img src="/media/img/art_8.webp" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Unreal Engine</div></div></div>
+				</button>
+				<button type="button" class="gallery-item landscape" data-year="2021" aria-label="Open Purple Planet artwork">
+					<img src="/media/img/bryce3D_1.jpg" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item square" data-year="2022" aria-label="Open Pixel Displacement artwork">
+					<img src="/media/img/art_1.jpg" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item landscape" data-vimeo="1187161902" data-year="2021" aria-label="Open START video">
+					<img src="/media/img/start_thumb.jpg" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item landscape" data-youtube="https://www.youtube.com/embed/TEt6PDIrmRU?si=7uin04bDXSORycl5" data-year="2022" aria-label="Open Hows Yr Luv Life audio visualizer">
+					<img src="/media/img/howsyur.webp" alt="" loading="lazy">
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+				<button type="button" class="gallery-item square" data-year="2022" aria-label="Open Blood Moon artwork">
+					<video src="/media/webm/bloodmoon.webm" autoplay loop muted playsinline></video>
+					<div class="item-overlay"><div class="item-info"><div class="item-type">Touchdesigner</div></div></div>
+				</button>
+			</div>
+		</div>
+	</main>
+</div>
+<button id="lightbox-close" class="lightbox-close" type="button" aria-label="Close media viewer" aria-controls="lightbox">x</button>
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Media viewer" aria-owns="lightbox-close">
+	<div class="lightbox-content" id="lightboxContent"></div>
+</div>
+<!-- *********** JAVASCRIPT! *********** -->
+<script src="js/horizontal-scroll.js" defer></script>
+<script src="https://player.vimeo.com/api/player.js" async></script>
+<script type="module" src="/js/nav.js"></script>
+<script type="module" src="/js/gallery.js"></script>
+</body>
 </html>

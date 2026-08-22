@@ -6,3 +6,11 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+#media
+/media/
+#node_modules
+/node_modules/
+#fonts
+/fonts/
+#assets
+/assets/

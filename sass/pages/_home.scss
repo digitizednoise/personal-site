@@ -1,0 +1,50 @@
+@use "../abstracts" as *;
+
+/* ******************* Index ******************* */
+
+.homeWrapper {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  position: relative;
+}
+
+.frontPageWrapper {
+  margin-bottom: 0;
+}
+
+.indexText {
+  position: absolute;
+  font-size: clamp(0.8125em, calc(2.4em + 2.2vmin), 4.375em);
+  font-family: $main-font;
+  color: $darkLight;
+  left: 0.5em;
+  top: calc(var(--navbar-height,0px) + 0.6em);
+  //var(--navbar-height)
+}
+
+.indexSubText {
+  font-size: clamp(1em, calc(1.03em + 1.1vmin), 2.5em);
+  font-family: $main-font;
+  position: absolute;
+  left: 3.8em;
+  top: calc(var(--navbar-height, 0px) + 3.53em);
+  color: $darkLight;
+}
+
+@media only screen and (max-height: 500px) and (max-width: 1000px){
+
+  .indexText {
+    top: calc(var(--navbar-height,0px) + 0em);
+    font-size: clamp(0.8125em, calc(2.2em + 0.5vw), 4.375em);
+  }
+
+  .indexSubText {
+    top: calc(var(--navbar-height, 0px) + 2.25em);
+    font-size: clamp(1em, calc(0.83em + 0.25vw), 2.5em);
+  }
+
+}
+
+/* ******************* Index End ******************* */
+

@@ -1,8 +1,16 @@
 {
-  "dependencies": {
-    "three": "^0.143.0"
+  "scripts": {
+    "build:css": "sass sass/style.scss sass/style.css --source-map",
+    "format": "prettier --write js/nav.js js/downloads.js js/gallery.js \"tests/**/*.mjs\" \"*.{json,mjs}\"",
+    "format:check": "prettier --check js/nav.js js/downloads.js js/gallery.js \"tests/**/*.mjs\" \"*.{json,mjs}\"",
+    "lint": "eslint js tests eslint.config.mjs playwright.config.mjs"
   },
   "devDependencies": {
-    "shiki": "^3.2.1"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.0",
+    "globals": "^17.11.0",
+    "http-server": "^14.1.1",
+    "prettier": "^3.9.6",
+    "sass": "^1.103.1"
   }
 }
